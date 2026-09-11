@@ -7,3 +7,4 @@ coverage/
 apps/storybook/storybook-static/
 apps/docs/.vitepress/dist/
 apps/docs/.vitepress/cache/
+.nx/
