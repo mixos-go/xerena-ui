@@ -45,13 +45,14 @@
   "name": "xerena-ui",
   "private": true,
   "version": "0.0.0",
+  "type": "module",
   "packageManager": "pnpm@10.0.0",
   "engines": { "node": ">=22" },
   "scripts": {
     "build": "nx run-many -t build",
-    "test": "nx run-many -t test",
-    "lint": "nx run-many -t lint",
-    "typecheck": "nx run-many -t typecheck",
+    "test": "nx run-many -t test --projects=tokens,react,react-native",
+    "lint": "nx run-many -t lint --projects=tokens,react,react-native",
+    "typecheck": "nx run-many -t typecheck --projects=tokens,react,react-native",
     "deploy:storybook": "nx build storybook"
   },
   "devDependencies": {
@@ -216,7 +217,7 @@ git commit -m "chore: add nx orchestration config"
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "lib": ["ES2022"],
-    "types": ["jest", "react-native"]
+    "types": ["jest"]
   }
 }
 ```
@@ -300,9 +301,10 @@ export default [
 
 Run:
 ```bash
-pnpm -w add -D eslint "typescript-eslint@^8" "@eslint/js@^9"
+pnpm -w add -D "eslint@^9" "typescript-eslint@^8" "@eslint/js@^9"
 pnpm --filter @xerena/eslint-config add -D @types/node
 ```
+Add `"@xerena/eslint-config": "workspace:*"` to the root `package.json` `devDependencies` so flat configs at the repo root and in packages can resolve it.
 
 - [ ] **Step 5: Verify lint runs against config files**
 
@@ -650,7 +652,7 @@ git commit -m "feat(tokens): bootstrap token package with generator"
   "files": ["dist"],
   "sideEffects": ["**/*.css"],
   "scripts": {
-    "build": "vite build && vite-plugin-dts build"
+    "build": "vite build && node scripts/copy-css.mjs"
   },
   "dependencies": {
     "@xerena/tokens": "workspace:*"
@@ -741,11 +743,11 @@ export default [
 
 ```ts
 import { resolve } from 'node:path'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import dts from 'vite-plugin-dts'
 
 export default defineConfig({
-  plugins: [dts({ rollupTypes: true })],
+  plugins: [dts()],
   build: {
     lib: {
       entry: resolve(import.meta.dirname, 'src/index.ts'),
@@ -771,6 +773,22 @@ export default defineConfig({
 
 ```ts
 import '@testing-library/jest-dom/vitest'
+```
+
+- [ ] **Step 6b: Create `packages/react/scripts/copy-css.mjs`**
+
+```js
+import { copyFileSync, mkdirSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+mkdirSync(resolve(root, 'dist'), { recursive: true })
+copyFileSync(
+  resolve(root, 'src/styles/base.css'),
+  resolve(root, 'dist/base.css'),
+)
+console.log('copied dist/base.css')
 ```
 
 - [ ] **Step 7: Create `packages/react/src/index.ts`**
@@ -802,7 +820,8 @@ export const ThemeContext = createContext<ThemeContextValue | null>(null)
 - [ ] **Step 9: Create `packages/react/src/primitives/Provider.tsx`**
 
 ```tsx
-import { ReactNode, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { ThemeContext, type ThemeContextValue, type XTheme } from './ThemeContext'
 
 export interface ProviderProps {
@@ -894,7 +913,7 @@ git commit -m "feat(react): bootstrap web package with theme provider"
 - Create: `packages/react-native/package.json`
 - Create: `packages/react-native/tsconfig.json`
 - Create: `packages/react-native/project.json`
-- Create: `packages/react-native/eslint.config.js`
+- Create: `packages/react-native/eslint.config.mjs` (ESM config; package stays untyped-as-module so `lib/commonjs` remains CJS in Node)
 - Create: `packages/react-native/src/index.ts`
 - Create: `packages/react-native/src/primitives/Provider.tsx`
 - Create: `packages/react-native/src/primitives/ThemeContext.ts`
@@ -953,14 +972,14 @@ module.exports = {
   },
   "peerDependencies": {
     "react": "^19.0.0",
-    "react-native": "^0.76.0"
+    "react-native": "^0.78.0"
   },
   "devDependencies": {
     "@testing-library/react-native": "^13.0.0",
     "@types/react": "^19.0.0",
     "jest": "^29.7.0",
     "react": "^19.0.0",
-    "react-native": "^0.76.0",
+    "react-native": "^0.78.0",
     "react-native-builder-bob": "^0.30.0",
     "typescript": "^5.6.0"
   }
@@ -1005,7 +1024,7 @@ module.exports = {
 }
 ```
 
-- [ ] **Step 5: Create `packages/react-native/eslint.config.js`**
+- [ ] **Step 5: Create `packages/react-native/eslint.config.mjs`**
 
 ```js
 import base from '@xerena/eslint-config'
@@ -1058,7 +1077,8 @@ export const ThemeContext = createContext<ThemeContextValue | null>(null)
 - [ ] **Step 8: Create `packages/react-native/src/primitives/Provider.tsx`**
 
 ```tsx
-import React, { ReactNode, useMemo, useState } from 'react'
+import { Fragment, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
 import { Text } from 'react-native'
 import { ThemeContext, type ThemeContextValue, type XTheme } from './ThemeContext'
 
@@ -1076,10 +1096,10 @@ export function Provider({ children, initialMode = 'light' }: ProviderProps) {
   )
 
   return (
-    <React.Fragment>
+    <Fragment>
       <Text>{`xerena-theme:${theme.mode}`}</Text>
       <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-    </React.Fragment>
+    </Fragment>
   )
 }
 ```
@@ -1637,10 +1657,10 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
-- [ ] **Step 3: Validate YAML syntax**
+- [ ] **Step 3: Validate workflow YAML syntax**
 
-Run: `node -e "require('js-yaml').load(require('fs').readFileSync('.github/workflows/ci.yml','utf8')); require('js-yaml').load(require('fs').readFileSync('.github/workflows/release.yml','utf8')); console.log('YAML OK')"`
-Expected: prints `YAML OK`.
+Run: `npx -y actionlint .github/workflows/ci.yml .github/workflows/release.yml`
+Expected: no errors reported, exit 0.
 
 - [ ] **Step 4: Commit**
 
@@ -1662,7 +1682,13 @@ git commit -m "ci: add pr checks and changesets release workflow"
 
 - [ ] **Step 1: Clean build of everything**
 
-Run: `npx nx run-many -t typecheck lint test build`
+Run:
+```bash
+nx run-many -t typecheck --projects=tokens,react,react-native
+nx run-many -t lint --projects=tokens,react,react-native
+nx run-many -t test --projects=tokens,react,react-native
+nx run-many -t build
+```
 Expected: all targets exit 0 across `tokens`, `react`, `react-native`, `storybook`, `docs`.
 
 - [ ] **Step 2: Confirm Nx cache hit on rerun**
