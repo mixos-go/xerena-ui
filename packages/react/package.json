@@ -13,8 +13,12 @@
     },
     "./styles/base.css": "./dist/base.css"
   },
-  "files": ["dist"],
-  "sideEffects": ["**/*.css"],
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "**/*.css"
+  ],
   "scripts": {
     "build": "vite build && node scripts/copy-css.mjs"
   },
@@ -26,8 +30,8 @@
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.0.0",
-    "@testing-library/jest-dom": "^6.6.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "jsdom": "^25.0.0",

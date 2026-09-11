@@ -1,4 +1,4 @@
-import { createContext } from 'react'
+import { createContext, useContext } from 'react'
 
 export type ColorMode = 'light' | 'dark'
 
@@ -12,3 +12,11 @@ export interface ThemeContextValue {
 }
 
 export const ThemeContext = createContext<ThemeContextValue | null>(null)
+
+export function useTheme(): XTheme {
+  const ctx = useContext(ThemeContext)
+  if (ctx === null) {
+    throw new Error('useTheme must be used within <ThemeProvider>')
+  }
+  return ctx.theme
+}
