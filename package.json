@@ -12,9 +12,12 @@
     "test": "nx run-many -t test --projects=tokens,react,react-native",
     "lint": "nx run-many -t lint --projects=tokens,react,react-native",
     "typecheck": "nx run-many -t typecheck --projects=tokens,react,react-native",
-    "deploy:storybook": "nx build storybook"
+    "deploy:storybook": "nx build storybook",
+    "changeset": "changeset",
+    "release": "changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.27.0",
     "@eslint/js": "^9",
     "@types/jest": "^29",
     "@xerena/eslint-config": "workspace:*",
