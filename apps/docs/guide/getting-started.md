@@ -11,6 +11,7 @@ pnpm add @xerena/tokens @xerena/react
 ```tsx
 import { Provider } from '@xerena/react'
 import '@xerena/react/styles/base.css'
+import '@xerena/tokens/tokens.css'
 
 export function App() {
   return <Provider>…</Provider>

@@ -16,7 +16,7 @@ export const ThemeContext = createContext<ThemeContextValue | null>(null)
 export function useTheme(): XTheme {
   const ctx = useContext(ThemeContext)
   if (ctx === null) {
-    throw new Error('useTheme must be used within <ThemeProvider>')
+    throw new Error('useTheme must be used within <Provider>')
   }
   return ctx.theme
 }

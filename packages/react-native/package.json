@@ -21,7 +21,8 @@
       "commonjs",
       "module",
       "typescript"
-    ]
+    ],
+    "exclude": ["**/*.test.ts", "**/*.test.tsx", "**/*.stories.tsx", "**/__tests__/**"]
   },
   "scripts": {
     "build": "bob build"
