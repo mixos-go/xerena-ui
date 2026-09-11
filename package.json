@@ -1,0 +1,18 @@
+{
+  "name": "xerena-ui",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "pnpm@10.0.0",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "nx run-many -t build",
+    "test": "nx run-many -t test --projects=tokens,react,react-native",
+    "lint": "nx run-many -t lint --projects=tokens,react,react-native",
+    "typecheck": "nx run-many -t typecheck --projects=tokens,react,react-native",
+    "deploy:storybook": "nx build storybook"
+  },
+  "devDependencies": {
+    "nx": "^21.0.0"
+  }
+}
