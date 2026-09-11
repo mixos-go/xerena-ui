@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config'
 import dts from 'vite-plugin-dts'
 
 export default defineConfig({
-  plugins: [dts()],
+  plugins: [dts({ entryRoot: 'src', rollupTypes: true })],
   build: {
     lib: {
       entry: resolve(import.meta.dirname, 'src/index.ts'),
