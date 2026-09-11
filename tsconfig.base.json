@@ -3,7 +3,9 @@
     "target": "ES2022",
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "skipLibCheck": true,
@@ -16,9 +18,16 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "paths": {
-      "@xerena/tokens": ["packages/tokens/src/index.ts"],
-      "@xerena/react": ["packages/react/src/index.ts"],
-      "@xerena/native": ["packages/react-native/src/index.ts"]
+      "@xerena/tokens": [
+        "./packages/tokens/src/index.ts"
+      ],
+      "@xerena/react": [
+        "./packages/react/src/index.ts"
+      ],
+      "@xerena/native": [
+        "./packages/react-native/src/index.ts"
+      ]
     }
-  }
+  },
+  "include": []
 }
