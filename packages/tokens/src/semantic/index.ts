@@ -3,13 +3,13 @@ import { spacing } from '../spacing'
 
 export const semantic = {
   color: {
-    primary: colors.blue[600],
-    primaryHover: colors.blue[700],
-    background: colors.gray[50],
-    surface: colors.gray[100],
-    text: colors.gray[900],
-    textMuted: colors.gray[500],
-    border: colors.gray[100],
+    primary: colors.ember[600],
+    primaryHover: colors.ember[700],
+    background: colors.sand[50],
+    surface: colors.sand[100],
+    text: colors.sand[900],
+    textMuted: colors.sand[500],
+    border: colors.sand[100],
   },
   spacing: {
     xs: spacing[1],
