@@ -9,9 +9,9 @@
   },
   "scripts": {
     "build": "nx run-many -t build",
-    "test": "nx run-many -t test --projects=tokens,react,react-native",
-    "lint": "nx run-many -t lint --projects=tokens,react,react-native",
-    "typecheck": "nx run-many -t typecheck --projects=tokens,react,react-native",
+    "test": "nx run-many -t test --projects=tokens,react,react-native,brand",
+    "lint": "nx run-many -t lint --projects=tokens,react,react-native,brand",
+    "typecheck": "nx run-many -t typecheck --projects=tokens,react,react-native,brand",
     "deploy:storybook": "nx build storybook",
     "changeset": "changeset",
     "release": "changeset publish"

@@ -79,6 +79,46 @@ importers:
         specifier: ^6.0.0
         version: 6.4.3(@types/node@22.20.2)(terser@5.51.2)(yaml@2.9.0)
 
+  packages/brand:
+    dependencies:
+      '@xerena/tokens':
+        specifier: workspace:*
+        version: link:../tokens
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^16.0.0
+        version: 16.3.3(@testing-library/dom@10.4.1)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.3.0(@types/react@19.3.0)
+      jsdom:
+        specifier: ^25.0.0
+        version: 25.0.1
+      react:
+        specifier: ^19.0.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.3.0(react@19.3.0)
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.3(@types/node@22.20.2)(terser@5.51.2)(yaml@2.9.0)
+      vite-plugin-dts:
+        specifier: ^4.0.0
+        version: 4.5.4(@types/node@22.20.2)(rollup@4.63.1)(typescript@5.9.3)(vite@6.4.3(@types/node@22.20.2)(terser@5.51.2)(yaml@2.9.0))
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.7(@types/node@22.20.2)(jsdom@25.0.1)(terser@5.51.2)(yaml@2.9.0)
+
   packages/react:
     dependencies:
       '@xerena/tokens':
