@@ -26,6 +26,7 @@ export default defineConfig({
         items: [
           { text: 'Getting Started', link: '/guide/getting-started' },
           { text: 'Theming', link: '/guide/theming' },
+          { text: 'Motion', link: '/guide/motion' },
         ],
       },
       {
