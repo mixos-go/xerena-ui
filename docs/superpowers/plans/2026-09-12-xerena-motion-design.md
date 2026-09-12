@@ -543,7 +543,7 @@ Run (from repo root):
 npx nx run-many -t typecheck lint test build --skip-nx-cache
 ```
 
-Expected: all target-bearing projects pass (tokens, react, react-native, brand, storybook build, docs build). Record counts — token tests should now be 9 unit tests in `index.test.ts` plus the new `generate.test.mjs` cases (13 assertions across its 4 `it` blocks), all green.
+Expected: all target-bearing projects pass (tokens, react, react-native, brand, storybook build, docs build). Record counts — token unit tests: 11 in `index.test.ts` (8 existing + 3 motion) plus 4 cases in `scripts/generate.test.mjs`, all green.
 
 - [ ] **Step 2: Verify the phase contract end-to-end**
 
