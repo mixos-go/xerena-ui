@@ -9,7 +9,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   release:
     runs-on: ubuntu-latest
-    if: github.repository == 'xerena/xerena-ui'
+    if: github.repository == 'mixos-go/xerena-ui'
     permissions:
       contents: write
       pull-requests: write
