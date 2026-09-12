@@ -133,8 +133,8 @@ Semantic: `raised` = `md`, `overlay` = `lg`.
 
 ## Storybook & Docs
 
-- **Storybook**: preview background → `sand.50`; sidebar shows `XerenaMark`; add showcase page **“Brand — Xerena identity”** (mark tryout across sizes/tones, palette swatches, type specimen).
-- **Docs (VitePress)**: new *Brand* page — DNA story, principles, voice, token tables, usage of mark/lockup.
+- **Storybook**: preview background → `sand.50`; fonts (Fraunces / Instrument Sans / Geist Mono) loaded via Google Fonts CDN; favicon tab → `XerenaMark` (`managerHead`); showcase page **“Brand — Xerena identity”** (mark tryout across sizes/tones, palette swatches, type specimen).
+- **Docs (VitePress)**: new *Brand* page — DNA story, principles, voice, token tables, usage of mark/lockup; config head loads the same fonts; docs favicon → mark SVG.
 
 ## Testing & CI
 
