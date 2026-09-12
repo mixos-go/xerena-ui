@@ -511,10 +511,10 @@ export const Default: Story = {}
 - [ ] **Step 2: Build the storybook app to verify**
 
 Run: `npx nx run storybook:build --skip-nx-cache`
-Expected: PASS. Then verify the Motion section is in the built storybook:
+Expected: PASS. Then verify the Motion section is in the built storybook. The SB 8 static build emits the compiled story under `apps/storybook/storybook-static/assets/tokens.stories-<hash>.js` (a `stories-tokens.stories.mjs` file does NOT exist):
 ```bash
-grep -c 'Motion — duration' apps/storybook/storybook-static/stories-tokens.stories.mjs apps/storybook/storybook-static/stories-tokens.stories.json 2>/dev/null || true
-grep -r 'cubic-bezier(' apps/storybook/storybook-static/stories-tokens.stories.mjs | head -1 || true
+grep -rl 'Motion — duration' apps/storybook/storybook-static/assets/ | head -1 || true
+grep -rl 'cubic-bezier(' apps/storybook/storybook-static/assets/ | head -1 || true
 ```
 The easing emphasis curve and the duration labels must appear in the compiled story module.
 
