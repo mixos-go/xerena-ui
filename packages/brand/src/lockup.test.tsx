@@ -13,4 +13,16 @@ describe('XerenaLockup', () => {
     const { container } = render(<XerenaLockup variant="stacked" />)
     expect(container.querySelector('span')).toHaveStyle('flex-direction: column')
   })
+
+  it('uses the dark ink text color by default', () => {
+    const { container } = render(<XerenaLockup />)
+    expect(container.querySelector('span')).toHaveStyle('color: rgb(43, 38, 32)')
+  })
+
+  it('surfaces the onDark tone on the wordmark via inheritance', () => {
+    const { container } = render(<XerenaLockup tone="onDark" />)
+    const spans = container.querySelectorAll('span')
+    expect(spans[0]).toHaveStyle('color: rgb(250, 247, 242)')
+    expect(spans[1]).toHaveStyle('color: inherit')
+  })
 })

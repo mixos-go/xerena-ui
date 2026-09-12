@@ -19,4 +19,18 @@ describe('XerenaMark', () => {
     expect(svg).toHaveAttribute('width', '48')
     expect(svg).toHaveAttribute('height', '48')
   })
+
+  it('uses light sand face tones by default', () => {
+    const { container } = render(<XerenaMark />)
+    const stops = container.querySelectorAll('linearGradient stop')
+    expect(stops[0]).toHaveAttribute('stop-color', '#f4efe6')
+    expect(stops[1]).toHaveAttribute('stop-color', '#faf7f2')
+  })
+
+  it('applies the darker onDark face tones', () => {
+    const { container } = render(<XerenaMark tone="onDark" />)
+    const stops = container.querySelectorAll('linearGradient stop')
+    expect(stops[0]).toHaveAttribute('stop-color', '#5a5245')
+    expect(stops[1]).toHaveAttribute('stop-color', '#2b2620')
+  })
 })
