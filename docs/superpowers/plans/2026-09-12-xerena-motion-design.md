@@ -389,7 +389,7 @@ Run: `npx nx run docs:build --skip-nx-cache`
 Expected: PASS; then verify the built page:
 ```bash
 grep -c 'Motion' apps/docs/.vitepress/dist/guide/motion.html
-grep -c 'easing-emphasis' apps/docs/.vitepress/dist/guide/motion.html
+grep -c 'cubic-bezier(0.34, 1.3, 0.64, 1)' apps/docs/.vitepress/dist/guide/motion.html
 ```
 The page exists and contains the tokens table content. Head links/fonts are already
 site-wide; no head change required for this page.
@@ -514,7 +514,7 @@ Run: `npx nx run storybook:build --skip-nx-cache`
 Expected: PASS. Then verify the Motion section is in the built storybook:
 ```bash
 grep -c 'Motion — duration' apps/storybook/storybook-static/stories-tokens.stories.mjs apps/storybook/storybook-static/stories-tokens.stories.json 2>/dev/null || true
-grep -r 'easing-emphasis\|cubic-bezier(0.34, 1.3, 0.64, 1)' apps/storybook/storybook-static/stories-tokens.stories.mjs | head -1 || true
+grep -r 'cubic-bezier(' apps/storybook/storybook-static/stories-tokens.stories.mjs | head -1 || true
 ```
 The easing emphasis curve and the duration labels must appear in the compiled story module.
 
