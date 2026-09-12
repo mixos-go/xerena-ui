@@ -44,6 +44,9 @@ importers:
 
   apps/storybook:
     dependencies:
+      '@xerena/brand':
+        specifier: workspace:*
+        version: link:../../packages/brand
       '@xerena/react':
         specifier: workspace:*
         version: link:../../packages/react

@@ -8,6 +8,7 @@
     "build": "storybook build"
   },
   "dependencies": {
+    "@xerena/brand": "workspace:*",
     "@xerena/react": "workspace:*",
     "@xerena/tokens": "workspace:*"
   },
