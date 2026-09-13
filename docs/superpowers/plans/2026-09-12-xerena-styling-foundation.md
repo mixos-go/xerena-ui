@@ -332,7 +332,7 @@ Expected: all three pass (build produces `dist/index.js`, `dist/index.cjs`, `dis
 - [ ] **Step 7: Commit**
 
 ```bash
-git add packages/styling tsconfig.base.json package.json
+git add packages/styling tsconfig.base.json package.json pnpm-lock.yaml
 git -c user.name="Xerena" -c user.email="xerena@local" commit -m "feat(styling): scaffold @xerena/styling with css resolvers"
 ```
 
