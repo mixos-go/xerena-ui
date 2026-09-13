@@ -1,225 +1,230 @@
 # Xerena — Web Components (Phase 5)
 
 - **Date:** 2026-09-13
-- **Status:** Approved in design discussion (brainstorming lengkap, 6 section arsitektur + 9 kategori komponen)
+- **Status:** Approved in design discussion (full brainstorm — 6 architecture sections + 9 component categories)
 - **Predecessor spec:** `docs/superpowers/specs/2026-09-12-xerena-styling-design.md` (Phase 4)
 - **Depends on:** `@xerena/tokens` (foundation + brand + motion), `@xerena/styling`, `apps/docs`, `apps/storybook`
 - **Makes available to:** Phase 6 (Native Components), Phase 7 (Release)
 
 ## Context
 
-Fase 4 menyerahkan lapisan ergonomis antara design tokens dan komponen: utility
-generator (`xr-*` classes), style helper resolvers, dan motion hooks/web
-motion. Spec Phase 4 menjanjikan: *"Semantic colors — `--xr-semantic-*` CSS vars
-+ semantic utility classes → Phase 5 (components + theming). `@xerena/react` akan
-juga depend pada `styling/react` (useMotion hooks)."*
+Phase 4 delivered the ergonomic layer between design tokens and components:
+the utility generator (`xr-*` classes), style helper resolvers, and web motion
+hooks. The Phase 4 spec promised: *"Semantic colors — `--xr-semantic-*` CSS
+vars + semantic utility classes → Phase 5 (components + theming). `@xerena/react`
+will also depend on `styling/react` (useMotion hooks)."*
 
-Fase ini (Components) mengirim **sistem komponen web lengkap** di
-`@xerena/react` — 42 komponen yang di-brainstorm satu per satu — plus perluasan
-tokens (status + dark palette), generator semantik, theming runtime, primitif
-headless internal, dan rilis versi di akhir fase.
+This phase (Components) ships a **complete web component system** in
+`@xerena/react` — 42 components, each brainstormed individually — plus a token
+extension (status + dark palette), the semantic generator, runtime theming,
+self-built headless primitives, and a versioned release at the end of the phase.
 
-Ini adalah **fase komponen**: `@xerena/react` menjadi library penuh.
-`@xerena/react-native` menerima **tanpa perubahan** (Phase 6).
+This is the **component phase**: `@xerena/react` becomes a full library.
+`@xerena/react-native` receives **no changes** (Phase 6).
 
 ## Package Architecture & Boundaries
 
-### Dependency graph setelah Phase 5
+### Dependency graph after Phase 5
 
 ```
 @xerena/tokens (primitive + semantic + status + dark)
    └─→ @xerena/styling (generator + css helpers + hooks)
           ├─→ styles.css: xr-* utilities + semantic + dark-aware vars
-          ├─→ @xerena/react (42 komponen)
+          ├─→ @xerena/react (42 components)
           │       ├─ primitives/: Slot/asChild, cn, useClassName, useVariant
-          │       ├─ hooks/: headless state machines (build sendiri)
-          │       ├─ components/<Category>/<Name>/: komponen + test + variants
+          │       ├─ hooks/: headless state machines (built in-house)
+          │       ├─ components/<Category>/<Name>/: component + test + variants
           │       └─ styles: import tokens.css + styles.css
-          └─→ docs + storybook (konsumen)
+          └─→ docs + storybook (consumers)
 ```
 
-### Aturan (ditegakkan via ESLint `no-restricted-imports` + Nx constraints)
+### Rules (enforced via ESLint `no-restricted-imports` + Nx constraints)
 
-- `@xerena/react`: hanya `tokens`, `styling` (. + ./react), `react`, `react-dom`,
-  `react-dom/client`. **Tanpa runtime library UI pihak ketiga** (Radix, Base UI,
-  etc.) — primitif headless dibangun sendiri, diinformasikan oleh riset atas
-  API mereka. Null dependency penuh dipertahankan.
-- `@xerena/react` TIDAK boleh mengimpor `@xerena/react-native` (runtime atau type).
-- `@xerena/styling` tetap non-mutasi dari komponen: tidak ada kepemilikan balik.
+- `@xerena/react`: only `tokens`, `styling` (`.` + `./react`), `react`,
+  `react-dom`, `react-dom/client`. **No third-party runtime UI library**
+  (Radix, Base UI, etc.) — headless primitives are built in-house, informed by
+  research on their APIs. Zero-dependency stays intact.
+- `@xerena/react` must NOT import `@xerena/react-native` (runtime or type).
+- `@xerena/styling` stays component-agnostic: no ownership from components.
 - `react` `^19.0.0` peer dependency.
 
-## Keputusan Desain Arsitektur (dikunci di brainstorming)
+## Locked Architectural Decisions (brainstorm outcome)
 
-1. **Konsumsi styling** — komponen merender class `xr-*` dari `styles.css`
-   sebagai sumber utama. `cssVar`/`css` (Phase 4) hanya untuk nilai dinamis
-   (animasi/override). Provider memuat `tokens.css` + `styles.css`.
-2. **Theming** — CSS var runtime di Provider: `Provider({ theme, toneOverrides? })`
-   → `useMemo` menghasilkan CSS var override di theme scope. Dark = scope
-   selector `[data-xerena-theme='dark']`. Komponen tidak pernah tahu tema —
-   semua membaca var.
-3. **Varian API** — `asChild`/composition à la Radix. Props union literal untuk
-   varian sederhana; komponen kompleks (Menu, Combobox, Dialog, Tabs,
-   Accordion, RadioGroup, Field) memakai composition kepala-parts + context.
-4. **Micro-motion** — satu inti motion (useMotion/useReducedMotion dari Phase 4)
-   + transition map per komponen. Motion = umpan balik fisik (hover/active/
-   focus-visible/press/enter/exit), bukan koreografi dekoratif.
-5. **Struktur dokumentasi** — satu spec utuh (dokumen ini): arsitektur →
-   per-kategori detail 42 komponen. Plan dipecah banyak task.
+1. **Styling consumption** — components render `xr-*` classes from `styles.css`
+   as the primary source. `cssVar`/`css` (Phase 4) only for dynamic values
+   (animation/override). The Provider loads `tokens.css` + `styles.css`.
+2. **Theming** — runtime CSS vars in the Provider: `Provider({ theme,
+   toneOverrides? })` → `useMemo` produces CSS var overrides on the theme
+   scope. Dark = scope selector `[data-xerena-theme='dark']`. Components never
+   know the theme — they all read vars.
+3. **Variant API** — `asChild`/composition à la Radix. Union-literal props for
+   simple variants; complex components (Menu, Combobox, Dialog, Tabs,
+   Accordion, RadioGroup, Field) use composition parts + context.
+4. **Micro-motion** — one motion core (`useMotion`/`useReducedMotion` from
+   Phase 4) + a transition map per component. Motion = physical feedback
+   (hover/active/focus-visible/press/enter/exit), not decorative choreography.
+5. **Documentation structure** — one integral spec (this document):
+   architecture → per-category detail for all 42 components. The plan splits
+   into many tasks.
 
-## Status & Dark Palette (perluasan `@xerena/tokens`)
+## Status & Dark Palette (`@xerena/tokens` extension)
 
 ### Primitive colors — status scale
 
-4 keluarga baru, bentuk konsisten `value.shade` (50–900) seperti ember/sand:
+Four new families, consistent `value.shade` shape (50–900) like ember/sand:
 
-- `success` (hijau kontras aman)
+- `success` (accessible green)
 - `warning` (amber)
-- `danger` (merah)
-- `info` (biru)
+- `danger` (red)
+- `info` (blue)
 
-`colors` **tetap light-only** (tanpa objek `{light,dark}`) — dark value hidup
-HANYA di `semantic` (keputusan brainstorming); menghindari ambiguitas
-"warna apa ini" dan menjaga contrast math primitif.
+`colors` **stays light-only** (no `{light,dark}` objects) — dark values live
+ONLY in `semantic` (brainstorm decision); this avoids "which color is this"
+ambiguity and keeps contrast math primitive.
 
-### Semantic aliases — dua mode
+### Semantic aliases — two modes
 
-Perluasan `semantic/index.ts`:
+`semantic/index.ts` extension:
 
 ```
-semantic.light / semantic.dark  (setiap alias → nilai primitive light/dark)
+semantic.light / semantic.dark  (each alias → light/dark primitive value)
 ```
 
-Alias light (dari palette yang ada):
+Light aliases (from the existing palette):
 `primary` (ember.600), `primaryHover` (ember.700), `primaryActive` (ember.900),
 `background` (sand.50), `surface` (sand.100), `surfaceHover` (sand.100 →
 tinted via primary alpha), `border` (sand.100), `borderStrong` (sand.500),
 `text` (sand.900), `textMuted` (sand.500), `textOnStrong` (light),
-`successtext`/`warningtext`/`dangertext`/`infotext` (shade gelap keluarga status
-untuk kontras pada latar terang),
-`successSurface`/`warningSurface`/`dangerSurface`/`infoSurface` (latar soft),
+`successText`/`warningText`/`dangerText`/`infoText` (dark status shades for
+contrast on light backgrounds),
+`successSurface`/`warningSurface`/`dangerSurface`/`infoSurface` (soft
+backgrounds),
 `danger`/`dangerHover`, `info`/`infoHover`.
 
-Alias dark memetakan ke palette dark yang sesuai (background terang → gelap,
-text terang, primary tetap ember-tinted lebih terang untuk aksesibilitas pada
-latar gelap). Nilai eksak ditentukan saat implementasi generator — prinsip:
-**kontras minimal 4.5:1 untuk teks, 3:1 untuk non-teks** (WCAG AA).
+Dark aliases map to the matching dark palette (light background → dark, light
+text; primary stays ember-tinted but brighter for accessibility on dark
+backgrounds). Exact values are chosen during generator implementation —
+principle: **minimum 4.5:1 contrast for text, 3:1 for non-text** (WCAG AA).
 
-`semantic.spacing` tetap (xs–xl) — tidak berubah.
+`semantic.spacing` stays (xs–xl) — unchanged.
 
-### Generator `@xerena/styling` (perluasan backward-compatible)
+### `@xerena/styling` generator (backward-compatible extension)
 
-Output `dist/styles.css` baru:
+New `dist/styles.css` output:
 
 ```
 :root { --xr-* primitive (existing) + --xr-semantic-* light }
 [data-xerena-theme='dark'] { --xr-semantic-* dark }
 ```
 
-Kelas semantik konsumen (bukan per-shade; membaca var sehingga ikut tema
-otomatis): `xr-bg-primary`, `xr-bg-primary-hover`, `xr-text-muted`,
+Consumer semantic classes (not per-shade — they read vars so they follow the
+theme automatically): `xr-bg-primary`, `xr-bg-primary-hover`, `xr-text-muted`,
 `xr-text-danger`, `xr-border-danger`, `xr-text-success`, `xr-bg-success-soft`,
-dst. — pola `<utility>-<semantic-alias>` yang diekspand untuk seluruh semantic.
+etc. — the `<utility>-<semantic-alias>` pattern expanded over all semantic
+aliases.
 
-Sumber: `tokens.json` + `semantic/index.ts` (via `resolveTokensPath` yang sudah
-ada). Tetap deterministik, tanpa DOM, `require.resolve` yang sama.
+Source: `tokens.json` + `semantic/index.ts` (via the existing
+`resolveTokensPath`). Stays deterministic, DOM-free, same `require.resolve`.
 
 ## Provider & Theming
 
-### `Provider` (luas API)
+### `Provider` (expanded API)
 
 ```ts
 interface ProviderProps {
   children: ReactNode
-  theme: XTheme            // XTheme diperluas: { mode, semantic?: DeepPartial<SemanticColors> }
+  theme: XTheme            // XTheme expanded: { mode, semantic?: DeepPartial<SemanticColors> }
   initialMode?             // deprecated → theme.mode
-  toneOverrides?: partial  // alias → nilai hex/var override
+  toneOverrides?: partial  // alias → hex/var override value
 }
 ```
 
-- Scope DOM: `[data-xerena-theme='light'|'dark']` (sudah ada).
-- `useMemo` menghasilkan `--xr-semantic-*` override string untuk scope aktif.
-- Mode disimpan state; persistence (localStorage/`<html>`) TIDAK di tangani —
-  pola didokumentasikan di docs (tanggungan aplikasi).
-- Import CSS: `@xerena/react/styles.css` (atau manual `tokens.css`+`styles.css`)
-  — satu jalur pakai.
-- `useTheme` returns `{ mode, semantic }` (diperluas).
+- DOM scope: `[data-xerena-theme='light'|'dark']` (already exists).
+- `useMemo` produces `--xr-semantic-*` override strings for the active scope.
+- Mode stored in state; persistence (localStorage/`<html>`) NOT handled —
+  pattern documented in the docs (application responsibility).
+- CSS import: `@xerena/react/styles.css` (or manual `tokens.css`+`styles.css`)
+  — one usage path.
+- `useTheme` returns `{ mode, semantic }` (expanded).
 
-## Primitif Headless (dibangun sendiri)
+## Headless Primitives (built in-house)
 
-Tiga lapis, semua di `packages/react/src`:
+Three layers, all under `packages/react/src`:
 
-### Lapis 1 — Deformasi & styling
+### Layer 1 — Deformation & styling
 
-- `Slot` + `asChild`: anak menggantikan elemen render, props di-merge
-  (gaya Radix, tanpa library). Satu subtle perilaku: event/aria/styling
-  di-forward + di-merge ke anak.
-- `cn` (class merger, util internal) + `useClassName(...variants)`.
-- `useVariant`, `useSize`: mapping props → class `xr-*` dari `variants.ts`.
+- `Slot` + `asChild`: the child replaces the render element, props merged
+  (Radix-style, no library). One subtle behavior: events/aria/styling are
+  forwarded and merged into the child.
+- `cn` (class merger, internal util) + `useClassName(...variants)`.
+- `useVariant`, `useSize`: props → `xr-*` class mapping from `variants.ts`.
 - `styles.css` re-export — `import '@xerena/react/styles.css'`.
 
-### Lapis 2 — Hooks headless (state machine tanpa DOM)
+### Layer 2 — Headless hooks (DOM-free state machines)
 
 - `useControllableState(value, defaultValue, onChange)`.
 - `useFocusRing`, `useDisabled`, `usePress` (`:active`/`:disabled`),
   `useFocusTrap` (Dialog/Drawer), `useDismissable` (Popover/Menu), `useFlushSync`.
-- `useRovingFocus` (Tabs/RadioGroup/Dialog-close, toolbars).
-- `useReducedMotionSync` — satu titik: gabung `useReducedMotion` + transition map
-  → komponen tidak logika sendiri.
-- `useMediaQuery` (dapat digabung ke useMotion untuk UX responsive).
+- `useRovingFocus` (Tabs/RadioGroup/toolbars).
+- `useReducedMotionSync` — one point: combines `useReducedMotion` + transition
+  map → components write no logic themselves.
+- `useMediaQuery` (composable with `useMotion` for responsive UX).
 
-### Lapis 3 — Composition primitives (kepala-parts)
+### Layer 3 — Composition primitives
 
 - `Menu`, `Combobox`, `Dialog`, `Tabs`, `Accordion`, `RadioGroup/CheckboxGroup`,
-  `Field`, `Popover` — masing-masing Root/Trigger|.../Content dengan context
-  provider internal.
-- `OverlayPrimitive` internal: portal + focus-trap + dismiss-aware — SATU
-  implementasi dipakai Dialog/Drawer/Popover/PreviewPopover.
-- `PreviewPopover` internal ringan (untuk Tooltip/Pagination preview).
-- **Tanpa** `Provider` tingkat state global selain React context lokal per komponen.
+  `Field`, `Popover` — each Root/Trigger|.../Content with an internal context
+  provider.
+- `OverlayPrimitive` internal: portal + focus-trap + dismiss-aware — ONE
+  implementation reused by Dialog/Drawer/Popover/PreviewPopover.
+- `PreviewPopover` internal (used by Tooltip/Pagination preview).
+- **No** global state Provider beyond per-component React contexts.
 
-## Sistem Micro-Motion (aturan shared — dikunci)
+## Micro-Motion System (shared, locked rules)
 
-1. **Reduced-motion selalu dibormati** — `useReducedMotion()`/snap-to-instant dari
-   Phase 4 menangani; komponen TIDAK menulis logika sendiri.
-2. **Micro-motion hanya umpan balik fisik** — hover/active/focus-visible/press/
-   enter/exit. Bukan koreografi dekoratif.
-3. **Semua nilai dari tokens** (`motion.duration`, `motion.easing`) — tanpa magic
-   number.
-4. **Transisi default ringan**: ≤150ms total per interaksi (sistem normal).
-5. **Dismissible/popup** (Dialog, Menu, Popover, Toast, Drawer): enter/exit
-   animation — duration `moderate`/`emphatic`, easing `enter`/`exit`.
-6. **`animated` variant** (mis. Button): boost press scale/shadow — jelas, tetap
-   reduced-safe.
+1. **Reduced motion is always honored** — `useReducedMotion()`/snap-to-instant
+   from Phase 4 handles it; components write no logic of their own.
+2. **Micro-motion is only physical feedback** — hover/active/focus-visible/
+   press/enter/exit. Not decorative choreography.
+3. **All values come from tokens** (`motion.duration`, `motion.easing`) — no
+   magic numbers.
+4. **Default transitions are light**: ≤150ms total per interaction (normal
+   systems).
+5. **Dismissible/popup** (Dialog, Menu, Popover, Toast, Drawer):
+   enter/exit animation — `moderate`/`emphatic` duration, `enter`/`exit` easing.
+6. **`animated` variant** (e.g. Button): boosted press scale/shadow — visible,
+   still reduced-safe.
 
-Tiap komponen di bawah memiliki tabel **Motion** — event → property →
-duration → easing → reduced fallback.
+Every component below has a **Motion** table — event → property → duration →
+easing → reduced fallback.
 
-## Komponen — 42, per kategori
+## Components — 42, per category
 
 ### Actions (4)
 
 #### Button
-| Aspek | Spesifikasi |
+| Aspect | Specification |
 |---|---|
-| Varian | `primary`(solid) · `ghost`(transparent) · `outline`(border+text-primary) · `soft`(tinted bg) · `destructive`(danger solid) · `link`(text-only) |
-| Size | `sm`(h-8) · `md`(h-10) · `lg`(h-12) |
+| Variants | `primary`(solid) · `ghost`(transparent) · `outline`(border+text-primary) · `soft`(tinted bg) · `destructive`(danger solid) · `link`(text-only) |
+| Sizes | `sm`(h-8) · `md`(h-10) · `lg`(h-12) |
 | States | default · hover · active(press) · focus-visible(ring) · disabled · loading(aria-busy) |
 | Motion | hover `fast`/`enter` translateY(-1px)+bg tint · active `instant`/`exit` scale(0.98) · focus ring `fast` · `animated`: press scale(0.96)+shadow |
 | A11y | native `<button>`, focus ring, `aria-busy`, `type="button"` default |
 | API | `asChild`, `loading`, `leftIcon/rightIcon`, `fullWidth`, `variant`, `size` |
 
 #### IconButton
-Same 5 varian (minus link) + sizes sm/md/lg. **`aria-label` wajib**. Tooltip
-opsional. Motion: hover tint `fast`/`enter`, active scale(0.94).
+Same 5 variants (minus `link`) + sizes sm/md/lg. **`aria-label` required**.
+Optional tooltip. Motion: hover tint `fast`/`enter`, active scale(0.94).
 
 #### Link
-`variant`: `default`(text-primary underline-hover) · `muted` · `animated`
-(underline slide-in). `asChild` esensial. `target/rel` passthrough,
+`variant`: `default`(text-primary underline-on-hover) · `muted` · `animated`
+(underline slide-in). `asChild` essential. `target/rel` passthrough,
 `aria-current`. Motion: underline `fast`/`enter`.
 
 #### ButtonGroup
-Orientation (`horizontal`/`vertical`), `spacing` size, `value`+`onValueChange`
-optional (selection). No own motion. A11y: group roles sesuai konteks.
+Orientation (`horizontal`/`vertical`), `spacing` size, optional
+`value`+`onValueChange` (selection). No own motion. A11y: group roles per
+context.
 
 ### Typography (6)
 
@@ -229,25 +234,25 @@ optional (selection). No own motion. A11y: group roles sesuai konteks.
 `center`. No motion. A11y via `as`.
 
 #### Heading
-`as` `h1–h6`; mapping visual `typography.display.xs→xl`. `asChild`. No motion.
-Satu `h1` per view (doc pattern).
+`as` `h1–h6`; visual mapping `typography.display.xs→xl`. `asChild`. No motion.
+One `h1` per view (doc pattern).
 
 #### Badge
 `tone`: `neutral` · `info` · `success` · `warning` · `danger` · `brand` —
-soft bg + kontras text via `--xr-semantic-*`. Sizes `sm/md`, radius `full`.
-No motion. `aria-label` bila icon-only.
+soft bg + contrast text via `--xr-semantic-*`. Sizes `sm/md`, radius `full`.
+No motion. `aria-label` when icon-only.
 
 #### Divider
 `orientation` `horizontal`/`vertical`, `variant` `solid`/`dashed`,
-`label`(opsional "or"). A11y: `role="separator"`, `aria-orientation`.
+optional `label`("or"). A11y: `role="separator"`, `aria-orientation`.
 
 #### Skeleton
-`shape`: `line`/`circle`/`rect`/`text`. `width/height`. Motion: pulse `base`
+`shape`: `line`/`circle`/`rect`/`text`. `width/height`. Motion: `base` pulse
 loop (non-reduced); static fallback. A11y: `aria-hidden` + container
 `role="status"`/`aria-busy`.
 
 #### Kbd
-Family mono, border+radius sm, text muted. `<kbd>` native. No motion.
+Mono family, border+radius sm, muted text. Native `<kbd>`. No motion.
 
 ### Layout (3)
 
@@ -260,43 +265,45 @@ Family mono, border+radius sm, text muted. `<kbd>` native. No motion.
 `justifyContent`, `wrap`. `as`. No motion.
 
 #### Grid
-`variant`: `auto`(auto-fit) · `explicit`. `columns`(1–12), `gap`. `as`. No motion.
+`variant`: `auto`(auto-fit) · `explicit`. `columns`(1–12), `gap`. `as`.
+No motion.
 
-### Form dasar (7)
+### Form (base) (7)
 
-Prinsip bersama: semua field pakai `Field`; error → border/teks danger,
-`aria-invalid`+`aria-describedby`; disabled/readOnly native; layout `h-10` md,
-radius `sm`, fokus ring `primary`; motion fokus `fast`/`enter`; error TIDAK
-bergoyang/bergetar.
+Shared principles: all fields use `Field`; error → danger border/text,
+`aria-invalid`+`aria-describedby`; disabled/readOnly native; `h-10` md layout,
+`sm` radius, `primary` focus ring; focus motion `fast`/`enter`; errors DO NOT
+shake or vibrate.
 
 #### Field
-`label`, `hint`, `error`, `required`(asterisk+aria), `asChild`. Auto `htmlFor`/
-`id`/`aria-describedby`. No motion.
+`label`, `hint`, `error`, `required`(asterisk+aria), `asChild`. Automatic
+`htmlFor`/`id`/`aria-describedby`. No motion.
 
 #### Input
-`variant`: `outlined`(default) · `filled`. Type passthrough. Addon → InputGroup.
+`variant`: `outlined`(default) · `filled`. Type passthrough. Addons →
+InputGroup.
 
 #### Textarea
-Seperti Input + `rows`, `resize`(`none`/`auto`), `autoSize` optional.
+Like Input + `rows`, `resize`(`none`/`auto`), optional `autoSize`.
 
 #### Select (native)
 Native `<select>`+`<option>`, `multiple`, `placeholder`. Motion: chevron
-`instant` rotate saat open. A11y: native select (role implied), `aria-invalid`.
+`instant` rotate when open. A11y: native select (implied role), `aria-invalid`.
 
 #### Checkbox
-Varian: `default`, `mixed`(indeterminate). `checked`/`onCheckedChange`,
+Variants: `default`, `mixed`(indeterminate). `checked`/`onCheckedChange`,
 uncontrolled. Motion: ✓ fill `instant` + pop `fast`/`enter`. A11y:
 `role="checkbox"`, `aria-checked`, native hidden input.
 
 #### Radio
-Sama konsep; group via `RadioGroup`. Motion: dot pop `fast` saat pilih.
+Same concept; grouped via `RadioGroup`. Motion: dot pop `fast` on select.
 
 #### Switch
 `checked`/`onCheckedChange`, sizes sm/md. Motion: thumb translate
 (×27 sm / ×32 md) `base`/`enter`, bg change `base`; reduced → instant.
 A11y: `role="switch"`, `aria-checked`, native checkbox input.
 
-### Form lanjutan (6)
+### Form (advanced) (6)
 
 #### Slider
 `variant`: `single` · `range`. min/max/step, orientation h/v. Motion: thumb
@@ -304,26 +311,26 @@ drag `base`/`enter`, release settle `base`/`enter`. A11y: `role="slider"`,
 `aria-valuemin/max/now/text`, arrow keys.
 
 #### Combobox
-**Struktur**: `Combobox`(Root) · `Input` · `List` · `Option` · Clear.
-Varian: `default`(popover) · `inline`. State: search, open/close, keyboard nav
-(aria-activedescendant), active/selected, loading(opt), empty state.
+**Structure**: `Combobox`(Root) · `Input` · `List` · `Option` · Clear.
+Variants: `default`(popover) · `inline`. State: search, open/close, keyboard
+nav (aria-activedescendant), active/selected, loading(opt), empty state.
 Motion: list fade+slide `fast`/`enter`; option highlight bg tint `fast`.
 A11y: `role="combobox"` + `aria-expanded/controls/activedescendant`, listbox,
 escape/blur close, focus return.
 
 #### RadioGroup
-Binding value context + layout orientation. A11y: `role="radiogroup"`,
-`aria-labelledby`. No motion sendiri.
+Value context binding + layout orientation. A11y: `role="radiogroup"`,
+`aria-labelledby`. No own motion.
 
 #### CheckboxGroup
-Sama untuk Checkbox. n:1 wiring.
+Same for Checkbox. n:1 wiring.
 
 #### InputGroup
-Compose Control + addon (icon/button/text/Select). Variant `outlined/filled`.
-Fokus ring menyatu.
+Combine Control + addon (icon/button/text/Select). Variant `outlined/filled`.
+Unified focus ring.
 
 #### NumberInput (Stepper)
-Varian `default`(+/−) · `compact`. min/max/step, format(Intl opt).
+Variants `default`(+/−) · `compact`. min/max/step, optional format (Intl).
 Motion: press `instant`/scale(0.94). A11y: `role="spinbutton"`,
 `aria-valuenow/min/max`, up/down keys.
 
@@ -333,130 +340,130 @@ Motion: press `instant`/scale(0.94). A11y: `role="spinbutton"`,
 `variant`: `outlined`(default) · `elevated` · `soft` · `interactive` · `flat`.
 `padding` sm/md/lg, `radius` md default. Motion: `interactive` hover
 translateY(-2px)+shadow `base`/`enter`, focus ring `fast`.
-A11y: `as`/`asChild` untuk semantik.
+A11y: `as`/`asChild` for semantics.
 
 #### Avatar
 `variant`: `image` · `initials` · `icon`. Sizes sm/md/lg/xl. Morph
-`square`/`circle`. `onClick` → ring+fokus. Tanpa AvatarGroup (Phase 5);
-`stacked` opt.
+`square`/`circle`. `onClick` → ring+focus. No AvatarGroup (Phase 5);
+optional `stacked`.
 
 ### Data display (2)
 
 #### Table (toolkit)
-Struktur: `Table`(Root, context) · `Head` · `Body` · `Row` · `Cell`
-(th+scope passthrough). Fitur:
+Structure: `Table`(Root, context) · `Head` · `Body` · `Row` · `Cell`
+(th+scope passthrough). Features:
 
 - `variant`: `striped` · `outlined` · `grid` · `hover`; `size` sm/md/lg.
 - `frozenHeader` — sticky thead (scroll container `maxHeight`).
-- **Checklist**: `TableCheckbox` header (select-all, tri-state) + per-baris;
-  `selection` controlled (`selectedRowKeys`/`onSelectionChange`) atau
+- **Checklist**: `TableCheckbox` header (select-all, tri-state) + per-row;
+  `selection` controlled (`selectedRowKeys`/`onSelectionChange`) or
   uncontrolled; `aria-selected`.
 - **Sub-table**: `Row expandable` → `expandContent`; chevron toggle,
   expanded controlled/uncontrolled. Motion: height reveal `moderate`/`enter`,
-  collapse reverse (reduced → instant). A11y: `aria-expanded`, `aria-controls`.
-- **Edit table**: `EditableCell` — text → editor (`Input`/`Select`/`NumberInput`),
-  Enter save, Esc cancel, blur=save opt. `onCellChange(rowId, colId, value)`.
-  A11y: cell `aria-label`, focus management.
-- **Row actions bar**: `RowActions` — positioning `actionsPosition` `left`/`right`
-  (default right); col sticky opt; header-cell placeholder. A11y: header cell
-  dengan aria.
-- **Search/filter**: `TableSearch` — input toolbar (custom `filterFn` default
-  prefix case-insensitive; `onSearchChange` controlled untuk server-side);
-  `noResults` state. Tidak auto-disable seleksi.
+  reverse collapse (reduced → instant). A11y: `aria-expanded`, `aria-controls`.
+- **Edit table**: `EditableCell` — text → editor
+  (`Input`/`Select`/`NumberInput`), Enter save, Esc cancel, optional blur-save.
+  `onCellChange(rowId, colId, value)`. A11y: cell `aria-label`, focus mgmt.
+- **Row actions bar**: `RowActions` — `actionsPosition` `left`/`right`
+  (default right); optional sticky col; header-cell placeholder. A11y: header
+  cell with aria.
+- **Search/filter**: `TableSearch` — toolbar input (custom `filterFn`, default
+  prefix case-insensitive; `onSearchChange` controlled for server-side);
+  `noResults` state. Selection not auto-disabled.
 
-Semua opsional — Table dasar tetap ringan tanpa fitur.
+All optional — the base Table stays light without features.
 
-#### Pagination (dengan preview)
+#### Pagination (with preview)
 `variant`: `page` · `simple`(prev/next+info). `totalPages` computed,
 `pageSize`/`total`/current, `siblingPageCount`(1 default).
-**Preview hover/focus**: `renderPagePreview(page)` → mini popover 3 baris
-pertama/ringkasan; lazy (hanya saat hover/focus); `aria-describedby` ke preview
-id; tidak steal focus; click tetap langsung nav. Motion: popover masuk
-`fast`/`enter`, keluar `moderate`/`exit` (reduced instant). A11y:
+**Hover/focus preview**: `renderPagePreview(page)` → mini popover with first-3
+rows/summary; lazy (only on hover/focus); `aria-describedby` to preview id;
+does not steal focus; click still navigates directly. Motion: popover enter
+`fast`/`enter`, exit `moderate`/`exit` (reduced instant). A11y:
 `role="navigation"`+aria-label, `aria-current="page"`.
-Memakai primitif `PreviewPopover`.
+Uses the `PreviewPopover` primitive.
 
 ### Feedback (8)
 
 #### Spinner
-Sizes sm/md/lg, `color` currentColor. CSS rotate loop (`animation` di
-styles.css, `prefers-reduced-motion` slow/instant — spinner = indikator, bukan
-dekorasi). A11y: `role="status"` + `aria-label`/visually-hidden "Loading…",
-container `aria-busy`.
+Sizes sm/md/lg, `color` currentColor. CSS rotate loop (`animation` in
+styles.css, `prefers-reduced-motion` slow/instant — spinner is an indicator,
+not decoration). A11y: `role="status"` + `aria-label`/visually-hidden
+"Loading…", container `aria-busy`.
 
 #### Progress (multimodal)
 `variant`: `bar`(default determinate/indeterminate) · `pageTop` ·
-`pageBottom` (fixed viewport, z-index overlay — progress halaman/section) ·
-`mouse` (ring kecil **mengikuti kursor**, fill sesuai progress; teks % opt;
-reduced → ring statis tetap ikut kursor, fill tanpa animasi) · `circle`
-(ring statis, `size`/`stroke`).
-Motion: value transition `base`/`enter`; `mouse` fill sama, posisi kursor
-langsung (no lerp); reduced → all instant/statis.
-A11y: `role="progressbar"`, aria-valuenow; pageTop/Bottom menjaga info off-
-screen; `mouse` + `aria-hidden` visual, nilai via aria.
+`pageBottom` (fixed viewport, z-index overlay — page/section progress) ·
+`mouse` (small **cursor-following ring**, fill tracks progress; optional % text;
+reduced → ring still follows cursor, fill without animation) · `circle`
+(static ring, `size`/`stroke`).
+Motion: value transition `base`/`enter`; `mouse` same fill, cursor position
+immediate (no lerp); reduced → all instant/static.
+A11y: `role="progressbar"`, aria-valuenow; pageTop/Bottom keep info
+off-screen-accessible; `mouse` + `aria-hidden` visual, value via aria.
 
 #### Message / Alert
 `tone`: `neutral` · `info` · `success` · `warning` · `danger`.
-Icon+title+description+close(opt). `position` dalam container:
+Icon+title+description+optional close. `position` in container:
 `top-left/top-center/top-right/bottom-left/bottom-center/bottom-right`
 (default `bottom-center`).
-Motion: masuk `fast`/`enter` fade+slight slide; exit bila dismiss.
+Motion: enter `fast`/`enter` fade+slight slide; exit on dismiss.
 A11y: `role="alert"` / live region.
 
 #### Tooltip
-Trigger hover/focus. Multiple: delay masuk 400 (mouse) / 0 (kb), exit 100.
-`position` dengan **anchor corner**: `topStart`/`topCenter`/`topEnd`(+bottom)
-— default `topCenter`. Posisi + flip. Memakai `PreviewPopover`.
+Trigger hover/focus. Delays: enter 400 (mouse) / 0 (kb), exit 100.
+`position` with **anchor corner**: `topStart`/`topCenter`/`topEnd`(+bottom) —
+default `topCenter`. Position + flip. Uses `PreviewPopover`.
 Motion: fade+rise `fast`/`enter` (reduced instant). A11y: `role="tooltip"`
 non-interactive, `aria-describedby`.
 
 #### Toast
 `variant`: success/danger/warning/info/neutral; `title`+`description`+
-`action`+`onDismiss`; stack per-corner; `position`: 6 corner
+`action`+`onDismiss`; per-corner stack; `position`: 6 corners
 (`top-left/top-center/top-right/bottom-left/bottom-center/bottom-right`);
 auto-dismiss(4–6s, pause-on-hover).
-Motion: masuk `moderate`/`enter` slide-up fade, keluar `emphatic`/`exit`
-(reduced instant). A11y: `role="status"` / `role="alert"` untuk error, aria-live
+Motion: enter `moderate`/`enter` slide-up fade, exit `emphatic`/`exit`
+(reduced instant). A11y: `role="status"` / `role="alert"` for error, aria-live
 polite.
 
 #### Dialog
-Struktur: Root/Portal/Overlay/Content/Close/Title/Description. Varian
+Structure: Root/Portal/Overlay/Content/Close/Title/Description. Variants
 `center` · `bottomSheet`. Focus trap, Esc close, aria-modal, labelled-by.
 Motion: overlay fade `moderate`/`enter`; content scale-in(0.97→1)+fade
 `moderate`/`enter`; close `fast`/`exit` (reduced instant). Stack: 2 max,
-aria-hide bawah. Memakai `OverlayPrimitive`.
+aria-hide below. Uses `OverlayPrimitive`.
 
 #### Drawer
-Sides `left`/`right`(default)/`top`/`bottom`. Sizes xs/sm/md/lg. Struktur
-seperti Dialog. Motion: slide-in `moderate`/`enter` dari sisi; overlay fade.
+Sides `left`/`right`(default)/`top`/`bottom`. Sizes xs/sm/md/lg. Structure like
+Dialog. Motion: slide-in `moderate`/`enter` from side; overlay fade.
 `OverlayPrimitive`.
 
 #### Popover
-Root/Trigger/Content(arrow). `trigger`: `click`/`hover`. Posisi+flip+boundary,
-Esc/outside-click close, fokus mgmt. Motion: fade+scale `fast`/`enter`, exit
+Root/Trigger/Content(arrow). `trigger`: `click`/`hover`. Position+flip+boundary,
+Esc/outside-click close, focus mgmt. Motion: fade+scale `fast`/`enter`, exit
 `moderate`/`exit`. `OverlayPrimitive`.
 
 ### Navigation (4)
 
 #### Tabs
-`Tabs`(Root) · `List` · `Trigger` · `Panel`. Varian `underline`(default) ·
+`Tabs`(Root) · `List` · `Trigger` · `Panel`. Variants `underline`(default) ·
 `pill` · `enclosed`. Orientation h/v. States: default/hover/active/selected/
 focus/disabled.
-Motion: **underline indicator sliding antar tab** `moderate`/`enter` (bukan
-cross-fade konten); reduced → switch instant.
+Motion: **underline indicator sliding between tabs** `moderate`/`enter` (no
+content cross-fade); reduced → instant switch.
 A11y: `role="tablist"/tab/tabpanel`, `aria-selected/controls`, roving + arrows
 (`useRovingFocus`), `aria-orientation`.
 
 #### Accordion
 `Accordion`(Root) · `Item` · `Header` · `Trigger` · `Content`. `type`:
 `single`(default) · `multiple`.
-Motion: content height reveal `moderate`/`enter`, collapse reverse; chevron
+Motion: content height reveal `moderate`/`enter`, reverse collapse; chevron
 rotate `fast`; reduced instant.
 A11y: `aria-expanded` (trigger), `aria-controls` (content), space/enter.
 
 #### Menu / Dropdown
 `Menu`(Root) · `Trigger` · `Content` · `Item` · `Separator` · `Label` ·
-`SubMenu`(opt). Varian `default`(stacked) · `grid`(icon toolbar).
+`SubMenu`(opt). Variants `default`(stacked) · `grid`(icon toolbar).
 Motion: open `fast`/`enter` fade+scale, close `moderate`/`exit`, item hover
 indicator `fast`; reduced instant.
 A11y: `aria-haspopup`, keyboard (arrow + typeahead), focus return.
@@ -466,78 +473,80 @@ A11y: `aria-haspopup`, keyboard (arrow + typeahead), focus return.
 `Breadcrumb` + `Item`(+`current`). `separator`: slash/chevron/dot.
 A11y: `aria-label="Breadcrumb"`, `aria-current="page"`. No motion.
 
-## Testing Strategy (per komponen)
+## Testing Strategy (per component)
 
 Vitest + RTL + jsdom, colocated `*.test.tsx`:
 
-- render default + setiap varian (table-driven; assert class `xr-*` tepat).
-- states: disabled, loading, hover/active (bila ada), checked/selected, controlled
-  vs uncontrolled.
-- theming: override Provider → assert var (bukan hex).
-- a11y: `getByRole`, aria assertions; `jest-axe` di render dasar tiap komponen.
-- reduced-motion: mock `matchMedia` reduce → assert snap `'1ms'`.
-- komponen overlay: portal, focus trap, esc/outside-click, focus return.
+- render default + every variant (table-driven; assert correct `xr-*` classes).
+- states: disabled, loading, hover/active (where applicable), checked/selected,
+  controlled vs uncontrolled.
+- theming: Provider override → assert var (not hex).
+- a11y: `getByRole`, aria assertions; `jest-axe` on the basic render of every
+  component.
+- reduced-motion: mock `matchMedia` reduce → assert `'1ms'` snap.
+- overlay components: portal, focus trap, esc/outside-click, focus return.
 
-Existing suites tetap hijau (tokens, react, react-native, brand, styling).
+Existing suites stay green (tokens, react, react-native, brand, styling).
 
 ## Storybook
 
-- Folder mengikuti kategori: `Actions/Button/*.stories.tsx`, `Data/Table/…`.
-- Jenis per komponen: Default + tiap varian + states + dark-mode +
-  reduced-motion preview. A11y addon aktif.
-- Decorator: `Provider` + `tokens.css` + `styles.css` (sudah ada; diperluas
-  dark toggle toolbar).
-- **Playwright test-runner** dipromosikan di Phase 5: interaksi dasar (open
-  menu, toggle accordion, submit) sebagai visual regression gate.
+- Folders follow category: `Actions/Button/*.stories.tsx`, `Data/Table/…`.
+- Stories per component: Default + every variant + states + dark-mode +
+  reduced-motion preview. A11y addon enabled.
+- Decorator: `Provider` + `tokens.css` + `styles.css` (already exists; extended
+  with dark toggle toolbar).
+- **Playwright test-runner** promoted in Phase 5: basic interactions (open
+  menu, toggle accordion, submit) as a visual regression gate.
 
-## Dokumentasi (VitePress)
+## Documentation (VitePress)
 
-- Guide baru per komponen: `guide/components/<Category>/<Name>.md` —
+- New guide per component: `guide/components/<Category>/<Name>.md` —
   purpose, API table (props), variants table, motion behavior, asChild usage,
-  a11y notes, contoh kode.
-- Update getting-started: cara pakai komponen + Provider + styling import.
-- Sidebar: sub-grup Components setelah Styling.
+  a11y notes, code examples.
+- Update getting-started: how to use components + Provider + styling import.
+- Sidebar: Components sub-group after Styling.
 
-## Deferred (parked ke fase berikutnya)
+## Deferred (parked to later phases)
 
-- **Native komponen** (`@xerena/react-native`) → Phase 6 (API selaras type-only
-  bila memungkinkan; tanpa runtime cross-import).
-- **i18n / RTL layout** (tanpa infra; ltr default, rtl di CSS tombol/icon bila
-  mudah).
-- **Virtualisasi data** (Table besar, Combobox besar) — tidak build-in.
-- **Drag & drop** — tidak ada komponen DnD.
-- **DatePicker/TimePicker/Calendar** — tidak ada; `NumberInput`/`Combobox`/`Field`
-  mencakup kebutuhan umum.
-- **Theming persist** (localStorage/`<html>`) — tanggung jawab aplikasi;
-  dokumentasi pola.
-- **Motion choreography kompleks** (page transitions, spring 3D) — mikro-saja.
+- **Native components** (`@xerena/react-native`) → Phase 6 (type-only API
+  alignment where possible; no runtime cross-import).
+- **i18n / RTL layout** (no infra; `ltr` default, `rtl` in button/icon CSS where
+  easy).
+- **Data virtualization** (large Table, large Combobox) — not built in.
+- **Drag & drop** — no DnD components.
+- **DatePicker/TimePicker/Calendar** — none; `NumberInput`/`Combobox`/`Field`
+  cover common needs.
+- **Theming persistence** (localStorage/`<html>`) — application
+  responsibility; documented pattern.
+- **Complex motion choreography** (page transitions, spring 3D) —
+  micro only.
 
-## Versioning & Release (di akhir Phase 5)
+## Versioning & Release (end of Phase 5)
 
-Setelah seluruh komponen + testing + docs hijau dan **review menyeluruh
-disetujui**: semua package naik versi + changeset, dan rilis dilakukan (tag
-`@xerena/*@x.y.z`) sebagai langkah akhir fase. Ini termasuk `@xerena/styling`
-keluar dari `0.0.0`.
+Once all components, testing, and docs are green AND **the whole-phase review
+is approved**: all packages get version bumps + changesets, and a release is
+performed (`@xerena/*@x.y.z` tags) as the phase's final step. This includes
+`@xerena/styling` leaving `0.0.0`.
 
-- Environment: sesuai fondasi (Node 22, pnpm 10, `NPM_TOKEN`).
-- Quality gate merge: typecheck+lint+test+build hijau; changeset; stories;
-  docs; minimal 1 approver.
+- Environment: per foundation (Node 22, pnpm 10, `NPM_TOKEN`).
+- Merge quality gate: green typecheck+lint+test+build; changeset; stories;
+  docs; minimum 1 approver.
 
-## Riwayat Keputusan (brainstorming ringkas)
+## Decision History (brainstorm summary)
 
-| # | Keputusan |
+| # | Decision |
 |---|---|
-| 1 | Kit lengkap ~42 komponen; varian eksplisit per komponen |
-| 2 | `asChild`/composition; headless dibangun sendiri (riset Radix/Base UI) |
-| 3 | Konsumsi styling: class `xr-*` utama, `cssVar` untuk dinamis |
-| 4 | Theming runtime: CSS var di Provider (theme + toneOverrides) |
-| 5 | Micro-motion: inti useMotion + transition map per komponen; motion = feel ux premium |
-| 6 | Satu spec utuh; plan dipecah banyak task |
-| 7 | Perluas generator: emit `--xr-semantic-*` + kelas semantik |
-| 8 | Status colors + dark palette ditambahkan ke tokens |
-| 9 | Dark HANYA di semantic (colors tetap light-only) |
-| 10 | Progress multimodal (bar/pageTop/pageBottom/mouse-ring/circle) |
-| 11 | Tooltip/Message/Toast positioning corner |
+| 1 | Full kit ≈ 42 components; explicit variants per component |
+| 2 | `asChild`/composition; headless built in-house (research Radix/Base UI) |
+| 3 | Styling consumption: `xr-*` classes primary, `cssVar` for dynamic |
+| 4 | Runtime theming: CSS vars in Provider (theme + toneOverrides) |
+| 5 | Micro-motion: useMotion core + per-component transition map; motion = premium UX feel |
+| 6 | One integral spec; plan split into many tasks |
+| 7 | Extend generator: emit `--xr-semantic-*` + semantic classes |
+| 8 | Status colors + dark palette added to tokens |
+| 9 | Dark ONLY in semantic (colors stay light-only) |
+| 10 | Multimodal Progress (bar/pageTop/pageBottom/mouse-ring/circle) |
+| 11 | Tooltip/Message/Toast corner positioning |
 | 12 | Table toolkit (checklist/sub-table/edit/frozen/row-actions/search+filter) |
 | 13 | Pagination hover/focus preview popover |
-| 14 | Bump + rilis di akhir fase (setelah review) |
+| 14 | Bump + release at end of phase (after review) |
