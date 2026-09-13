@@ -23,6 +23,7 @@
     "build": "vite build && node scripts/copy-css.mjs"
   },
   "dependencies": {
+    "@xerena/styling": "workspace:*",
     "@xerena/tokens": "workspace:*"
   },
   "peerDependencies": {

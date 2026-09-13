@@ -1,0 +1,1 @@
+export { useReducedMotion as useReducedMotionSync } from '@xerena/styling/react'
