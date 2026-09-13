@@ -731,7 +731,7 @@ function installMatchMedia(initialMatches: boolean) {
       onchange: null,
       addEventListener: (_: string, cb: () => void) => listeners.add(cb),
       removeEventListener: (_: string, cb: () => void) => listeners.delete(cb),
-    } as MediaQueryList
+    } as unknown as MediaQueryList
     mocks.set(query, mock)
     return mock
   }) as unknown as typeof window.matchMedia
