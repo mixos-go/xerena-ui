@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { colors, spacing, semantic, typography, elevation, radius, motion } from './index'
+import { colors, darkColors, spacing, semantic, typography, elevation, radius, motion } from './index'
 
 describe('color', () => {
   it('exposes the ember ramp', () => {
@@ -76,5 +76,24 @@ describe('motion', () => {
   it('covers exactly the spec keys', () => {
     expect(Object.keys(motion.duration).sort()).toEqual(['base', 'emphatic', 'fast', 'instant', 'long', 'moderate'])
     expect(Object.keys(motion.easing).sort()).toEqual(['emphasis', 'enter', 'exit', 'standard'])
+  })
+})
+
+describe('status colors', () => {
+  it('exposes accessible status ramps', () => {
+    expect(colors.success[600]).toBeDefined()
+    expect(colors.warning[600]).toBeDefined()
+    expect(colors.danger[600]).toBeDefined()
+    expect(colors.info[600]).toBeDefined()
+    expect(colors.success[50]).toBe('#eaf7ee')
+    expect(colors.danger[600]).toBe('#c0392b')
+  })
+})
+
+describe('darkColors', () => {
+  it('exposes dark-tuned ember and sand ramps', () => {
+    expect(darkColors.ember[900]).toBe('#f2b795')
+    expect(darkColors.sand[900]).toBe('#f0ece3')
+    expect(darkColors.sand[50]).toBe('#1b1712')
   })
 })
