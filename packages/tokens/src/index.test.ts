@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { colors, darkColors, spacing, semantic, typography, elevation, radius, motion } from './index'
+import { colors, darkColors, spacing, semantic, semanticDark, typography, elevation, radius, motion } from './index'
 
 describe('color', () => {
   it('exposes the ember ramp', () => {
@@ -95,5 +95,23 @@ describe('darkColors', () => {
     expect(darkColors.ember[900]).toBe('#f2b795')
     expect(darkColors.sand[900]).toBe('#f0ece3')
     expect(darkColors.sand[50]).toBe('#1b1712')
+  })
+})
+
+describe('semantic status aliases', () => {
+  it('resolves new aliases to primitives', () => {
+    expect(semantic.color.danger).toBe(colors.danger[600])
+    expect(semantic.color.successSurface).toBe(colors.success[50])
+    expect(semantic.color.dangerText).toBe(colors.danger[900])
+    expect(semantic.color.surfaceHover).toBe(colors.ember[50])
+    expect(semantic.color.textOnStrong).toBe(colors.sand[50])
+  })
+})
+
+describe('semantic dark aliases', () => {
+  it('resolves dark aliases through darkColors', () => {
+    expect(semanticDark.color.background).toBe(darkColors.sand[50])
+    expect(semanticDark.color.text).toBe(darkColors.sand[900])
+    expect(semanticDark.color.primary).toBe(darkColors.ember[600])
   })
 })
