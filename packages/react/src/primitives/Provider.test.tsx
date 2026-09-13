@@ -5,7 +5,7 @@ import { Provider } from './Provider'
 describe('Provider', () => {
   it('wraps children inside the theme surface', () => {
     render(
-      <Provider>
+      <Provider theme={{ mode: 'light' }}>
         <span>content</span>
       </Provider>,
     )
@@ -13,7 +13,12 @@ describe('Provider', () => {
   })
 
   it('renders data-xerena-theme attribute', () => {
-    render(<Provider>hi</Provider>)
+    render(<Provider theme={{ mode: 'light' }}>hi</Provider>)
     expect(document.querySelector('[data-xerena-theme="light"]')).not.toBeNull()
+  })
+
+  it('provides semantic override for dark mode', () => {
+    render(<Provider theme={{ mode: 'dark' }}>x</Provider>)
+    expect(document.querySelector('[data-xerena-theme="dark"]')).not.toBeNull()
   })
 })
