@@ -5,6 +5,9 @@
 @layer xerena-components {
   .xr-focus-ring { outline: none; }
   .xr-focus-ring:focus-visible { box-shadow: 0 0 0 3px var(--xr-semantic-color-primary); }
+  .xr-overlay { position: fixed; inset: 0; z-index: 40; }
+  .xr-overlay * { pointer-events: auto; }
+  .xr-preview-popover { z-index: 50; background: var(--xr-semantic-color-surface); color: var(--xr-semantic-color-text); border: 1px solid var(--xr-semantic-color-border); border-radius: calc(var(--xr-radius-sm) * 1px); padding: calc(var(--xr-spacing-1) * 1px) calc(var(--xr-spacing-2) * 1px); box-shadow: var(--xr-elevation-md); font-size: calc(var(--xr-typography-body-sm-fontSize) * 1px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
