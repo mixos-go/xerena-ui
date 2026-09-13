@@ -1706,7 +1706,7 @@ describe('Button', () => {
 describe('IconButton', () => {
   it('requires aria-label', () => {
     render(<IconButton aria-label="Close">×</IconButton>)
-    expect(screen.getByLabelText('Close')).toHaveClass('xr-iconbutton', 'xr-iconbutton--primary')
+    expect(screen.getByLabelText('Close')).toHaveClass('xr-iconbutton', 'xr-button--primary')
   })
 })
 ```
@@ -1744,7 +1744,6 @@ describe('ButtonGroup', () => {
 ```tsx
 import { Slot } from '../../primitives/Slot'
 import { useClassName, useDisabled, usePress } from '../../primitives'
-import { loading: cssLoading } from '../../primitives/cn'
 import type { CSSProperties, ReactNode } from 'react'
 
 export interface ButtonProps {
@@ -2541,7 +2540,7 @@ export function useTableSelection(controlledIds?: string[]) {
 // Table.tsx
 import { createContext, useContext } from 'react'
 import { useClassName } from '../../primitives/useClassName'
-import type { TableContextValue, types } from './types'
+import type { TableContextValue } from './types'
 import type { ReactNode } from 'react'
 const TableCtx = createContext<TableContextValue>({ variant: 'outlined', size: 'md', frozenHeader: false })
 export const useTableCtx = () => useContext(TableCtx)
@@ -2587,7 +2586,7 @@ export function Row({ expandable, expandContent, className, children }: RowProps
   const toggle = useCallback(() => setExpanded(p => !p), [])
   return (
     <>
-      <tr className={useClassName({ className }, [`xr-table-row ${expandable ? 'xr-table-row--expandable' : ''}`])} aria-expanded={expandable ? expanded : undefined}>
+      <tr role="row" className={useClassName({ className }, [`xr-table-row ${expandable ? 'xr-table-row--expandable' : ''}`])} aria-expanded={expandable ? expanded : undefined}>
         {expandable && <td className="xr-table-row__expand" onClick={toggle} style={{ cursor: 'pointer', width: 32, textAlign: 'center' }} aria-label="Toggle expand">
           <span style={{ display: 'inline-block', transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform calc(var(--xr-motion-duration-fast) * 1ms) cubic-bezier(var(--xr-motion-easing-standard))' }}>›</span>
         </td>}
