@@ -26,6 +26,12 @@
       ],
       "@xerena/native": [
         "./packages/react-native/src/index.ts"
+      ],
+      "@xerena/styling": [
+        "./packages/styling/src/index.ts"
+      ],
+      "@xerena/styling/react": [
+        "./packages/styling/src/react/index.ts"
       ]
     }
   },
