@@ -1,3 +1,15 @@
 [data-xerena-theme='dark'] {
   color-scheme: dark;
 }
+
+@layer xerena-components {
+  .xr-focus-ring { outline: none; }
+  .xr-focus-ring:focus-visible { box-shadow: 0 0 0 3px var(--xr-semantic-color-primary); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
+}
