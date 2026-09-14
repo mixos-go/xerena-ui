@@ -1,22 +1,22 @@
 import { createContext, useContext, useEffect, useRef, useState, useId } from 'react'
 import { useFocusRing, useClassName } from '../../primitives'
 import type { KeyboardEvent } from 'react'
-const Ctx = createContext<{ open: boolean; setOpen: (o: boolean) => void; active: string; setActive: (a: string) => void; selected: string[]; setSelected: (s: string[]) => void; idPrefix: string }>({ open: false, setOpen: () => {}, active: '', setActive: () => {}, selected: [], setSelected: () => {}, idPrefix: '' })
+const Ctx = createContext<{ open: boolean; setOpen: (o: boolean) => void; active: string; setActive: (a: string) => void; selected: string[]; setSelected: (s: string[]) => void; idPrefix: string; listRef: React.RefObject<HTMLUListElement | null> }>({ open: false, setOpen: () => {}, active: '', setActive: () => {}, selected: [], setSelected: () => {}, idPrefix: '', listRef: { current: null } })
 
 function Root({ children, defaultOpen = false }: { children: React.ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen)
   const [active, setActive] = useState('')
   const [selected, setSelected] = useState<string[]>([])
   const idPrefix = useId().replace(/:/g, '')
-  return <Ctx.Provider value={{ open, setOpen, active, setActive, selected, setSelected, idPrefix }}>{children}</Ctx.Provider>
+  const listRef = useRef<HTMLUListElement>(null)
+  return <Ctx.Provider value={{ open, setOpen, active, setActive, selected, setSelected, idPrefix, listRef }}>{children}</Ctx.Provider>
 }
 function Input({ placeholder, value, onChange, className, ...rest }: { placeholder?: string; value?: string; onChange?: (v: string) => void } & React.InputHTMLAttributes<HTMLInputElement>) {
-  const { open, setOpen, active, setActive, selected, setSelected, idPrefix } = useContext(Ctx)
+  const { open, setOpen, active, setActive, selected, setSelected, idPrefix, listRef } = useContext(Ctx)
   const { onFocus, onBlur, focusWithin } = useFocusRing()
   const inputRef = useRef<HTMLInputElement>(null)
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    const listEl = document.querySelector<HTMLElement>(`[data-combobox-list="${idPrefix}"]`)
-    let options = Array.from(listEl?.querySelectorAll<HTMLElement>('[role="option"]') ?? [])
+    const options = Array.from(listRef.current?.querySelectorAll<HTMLElement>('[role="option"]') ?? [])
     const idx = options.findIndex(o => o.id === active)
     let nextActive = active
     if (e.key === 'ArrowDown') { e.preventDefault(); setOpen(true); nextActive = active ? options[Math.min(idx + 1, options.length - 1)]?.id ?? '' : options[0]?.id ?? '' }
@@ -26,7 +26,6 @@ function Input({ placeholder, value, onChange, className, ...rest }: { placehold
     else if (e.key === 'Enter') {
       if (active) {
         e.preventDefault()
-        options = Array.from(listEl?.querySelectorAll<HTMLElement>('[role="option"]') ?? [])
         const target = options[idx]
         const value = target?.getAttribute('data-value')
         if (value !== null && value !== undefined) setSelected([...selected, value])
@@ -50,9 +49,8 @@ function Input({ placeholder, value, onChange, className, ...rest }: { placehold
     role="combobox" aria-expanded={open} aria-autocomplete="list" aria-controls={`${idPrefix}-list`} aria-activedescendant={active || undefined} {...rest} />
 }
 function List({ open, children, className }: { open?: boolean; children: React.ReactNode; className?: string }) {
-  const { open: ctxOpen, setActive, idPrefix } = useContext(Ctx)
+  const { open: ctxOpen, setActive, idPrefix, listRef } = useContext(Ctx)
   const isOpen = open ?? ctxOpen
-  const listRef = useRef<HTMLUListElement>(null)
   const listClass = useClassName({ className }, ['xr-combobox__list'])
   useEffect(() => {
     if (isOpen && listRef.current) {

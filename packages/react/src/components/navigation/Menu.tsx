@@ -2,13 +2,13 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { OverlayPrimitive, Slot, useReducedMotionSync, useRovingFocus } from '../../primitives'
 import type { KeyboardEvent, ReactElement, ReactNode } from 'react'
 import type { CSSProperties } from 'react'
-const Ctx = createContext<{ open: boolean; setOpen: (o: boolean) => void; openMenu: () => void; lastFocused: HTMLElement | null; triggerRef: React.RefObject<HTMLElement | null> }>({ open: false, setOpen: () => {}, openMenu: () => {}, lastFocused: null, triggerRef: { current: null } })
+const Ctx = createContext<{ open: boolean; setOpen: (o: boolean) => void; openMenu: () => void; lastFocused: React.RefObject<HTMLElement | null>; triggerRef: React.RefObject<HTMLElement | null> }>({ open: false, setOpen: () => {}, openMenu: () => {}, lastFocused: { current: null }, triggerRef: { current: null } })
 function Root({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
-  const [lastFocused, setLastFocused] = useState<HTMLElement | null>(null)
+  const lastFocused = useRef<HTMLElement | null>(null)
   const triggerRef = useRef<HTMLElement | null>(null)
   const openMenu = useCallback(() => {
-    setLastFocused(document.activeElement as HTMLElement | null)
+    lastFocused.current = document.activeElement as HTMLElement | null
     setOpen(true)
   }, [])
   return <Ctx.Provider value={{ open, setOpen, openMenu, lastFocused, triggerRef }}>{children}</Ctx.Provider>
@@ -44,7 +44,7 @@ function Content({ children, className }: { children: ReactNode; className?: str
     } else if (e.key === 'Escape') {
       e.preventDefault()
       setOpen(false)
-      lastFocused?.focus()
+      lastFocused.current?.focus()
     }
   }
   if (!open) return null
