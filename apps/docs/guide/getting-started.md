@@ -10,19 +10,27 @@ pnpm add @xerena/tokens @xerena/react
 
 ```tsx
 import { Provider } from '@xerena/react'
-import '@xerena/react/styles/base.css'
-import '@xerena/tokens/tokens.css'
+import '@xerena/react/styles.css'
 
 export function App() {
   return <Provider theme={{ mode: 'light' }}>…</Provider>
 }
 ```
 
+`@xerena/react/styles.css` aggregates the design-token variables and the
+component base styles in one import. For granular control, import them
+separately instead:
+
+```tsx
+import '@xerena/react/styles/base.css'
+import '@xerena/tokens/tokens.css'
+```
+
 ## Components
 
 ```tsx
 import { Button, Text, Card } from '@xerena/react'
-import '@xerena/react/styles/base.css'
+import '@xerena/react/styles.css'
 ```
 
 ```tsx

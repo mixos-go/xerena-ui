@@ -1,8 +1,7 @@
 import './fonts.css'
 import type { Preview } from '@storybook/react'
 import { Provider } from '@xerena/react'
-import '@xerena/react/styles/base.css'
-import '@xerena/tokens/tokens.css'
+import '@xerena/react/styles.css'
 
 const preview: Preview = {
   parameters: {
