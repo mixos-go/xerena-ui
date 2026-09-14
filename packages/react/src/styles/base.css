@@ -115,7 +115,11 @@
   .xr-table--frozen thead { position: sticky; top: 0; z-index: 1; background: var(--xr-semantic-color-background); }
   .xr-table--scrollable { overflow: auto; }
   .xr-table-checkbox__input { cursor: pointer; width: 16px; height: 16px; }
-  .xr-row-actions--sticky { position: sticky; right: 0; background: var(--xr-semantic-color-background); z-index: 1; }
+  .xr-pagination { display: flex; align-items: center; gap: calc(var(--xr-spacing-1) * 1px); font-size: calc(var(--xr-typography-body-md-fontSize) * 1px); }
+.xr-pagination button { border: none; background: none; cursor: pointer; color: var(--xr-semantic-color-text); border-radius: calc(var(--xr-radius-md) * 1px); }
+.xr-pagination button:disabled { opacity: 0.4; cursor: default; }
+.xr-pagination__page { transition: background-color calc(var(--xr-motion-duration-fast) * 1ms) cubic-bezier(var(--xr-motion-easing-standard)), color calc(var(--xr-motion-duration-fast) * 1ms) cubic-bezier(var(--xr-motion-easing-standard)); }
+.xr-pagination--simple span { margin-inline: 4px 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
