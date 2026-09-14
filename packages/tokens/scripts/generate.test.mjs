@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import tokens from '../src/tokens.json'
 import { toCssVars } from './generate.mjs'
 
@@ -26,4 +28,16 @@ describe('generate toCssVars', () => {
 
 it('imports generate.mjs without side effects (no dist files written)', () => {
   expect(typeof toCssVars).toBe('function')
+})
+
+describe('tokens.css semantic output', () => {
+  const css = readFileSync(resolve(import.meta.dirname, '../dist/tokens.css'), 'utf8')
+  it('emits light semantic vars in :root', () => {
+    expect(css).toContain('--xr-semantic-color-primary: ')
+    expect(css).toContain('--xr-semantic-color-danger: ')
+  })
+  it('emits dark semantic vars scoped to dark attribute', () => {
+    expect(css).toContain("[data-xerena-theme='dark']")
+    expect(css.slice(css.indexOf("data-xerena-theme='dark'"))).toContain('--xr-semantic-color-primary: ')
+  })
 })

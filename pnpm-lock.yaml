@@ -124,6 +124,9 @@ importers:
 
   packages/react:
     dependencies:
+      '@xerena/styling':
+        specifier: workspace:*
+        version: link:../styling
       '@xerena/tokens':
         specifier: workspace:*
         version: link:../tokens

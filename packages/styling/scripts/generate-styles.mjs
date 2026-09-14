@@ -9,7 +9,11 @@ export function resolveTokensPath(require) {
   return resolve(dirname(require.resolve('@xerena/tokens/package.json')), 'src/tokens.json')
 }
 
-export function buildStylesheet(tokens) {
+export function resolveSemanticPath(require) {
+  return resolve(dirname(require.resolve('@xerena/tokens/package.json')), 'src/semantic.json')
+}
+
+export function buildStylesheet(tokens, semanticMap = null) {
   const lines = []
   lines.push('/* Xerena utility classes — generated from @xerena/tokens. Do not edit. */')
   lines.push('')
@@ -18,6 +22,7 @@ export function buildStylesheet(tokens) {
   const varName = (segments) => `--xr-${segments.join('-')}`
 
   for (const [name, shades] of Object.entries(tokens.color)) {
+    if (Object.values(shades).some((value) => typeof value === 'object')) continue
     for (const [shade] of Object.entries(shades)) {
       const v = `var(${varName(['color', name, shade])})`
       add(`xr-bg-${name}-${shade}`, `background-color: ${v}`)
@@ -67,6 +72,17 @@ export function buildStylesheet(tokens) {
     add(`xr-ease-${key}`, `transition-timing-function: cubic-bezier(var(${varName(['motion', 'easing', key])}))`)
   }
 
+  if (semanticMap) {
+    const semantic = semanticMap.semantic ?? semanticMap
+    for (const alias of Object.keys(semantic.light)) {
+      const v = `var(--xr-semantic-color-${alias})`
+      const kebab = alias.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
+      add(`xr-bg-${kebab}`, `background-color: ${v}`)
+      add(`xr-text-${kebab}`, `color: ${v}`)
+      add(`xr-border-${kebab}`, `border-color: ${v}`)
+    }
+  }
+
   return `${lines.join('\n')}\n`
 }
 
@@ -74,7 +90,8 @@ const isMain = process.argv[1] !== undefined && resolve(process.argv[1]) === fil
 if (isMain) {
   const require = createRequire(import.meta.url)
   const tokens = JSON.parse(readFileSync(resolveTokensPath(require), 'utf8'))
+  const semantic = JSON.parse(readFileSync(resolveSemanticPath(require), 'utf8'))
   mkdirSync(resolve(root, 'dist'), { recursive: true })
-  writeFileSync(resolve(root, 'dist/styles.css'), buildStylesheet(tokens))
+  writeFileSync(resolve(root, 'dist/styles.css'), buildStylesheet(tokens, semantic))
   console.log('generated dist/styles.css')
 }
