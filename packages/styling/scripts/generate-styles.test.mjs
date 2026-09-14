@@ -56,10 +56,15 @@ describe('generate-styles', () => {
 
 describe('semantic utilities', () => {
   const tokens = { color: {}, spacing: {}, typography: { fontFamily: {}, body: {}, display: {}, mono: {} }, elevation: {}, radius: {}, motion: { duration: {}, easing: {} }, dark: {} }
-  const css = buildStylesheet(tokens, { semantic: { light: { primary: {}, danger: {} } } })
-  it('emits theme-aware semantic utilities', () => {
+  const css = buildStylesheet(tokens, { semantic: { light: { primary: {}, danger: {}, primaryHover: {}, textMuted: {}, borderStrong: {} } } })
+  it('emits theme-aware semantic utilities with kebab-case class names and camelCase var refs', () => {
     expect(css).toContain('.xr-bg-primary { background-color: var(--xr-semantic-color-primary); }')
     expect(css).toContain('.xr-text-danger { color: var(--xr-semantic-color-danger); }')
     expect(css).toContain('.xr-border-danger { border-color: var(--xr-semantic-color-danger); }')
+    expect(css).toContain('.xr-bg-primary-hover { background-color: var(--xr-semantic-color-primaryHover); }')
+    expect(css).toContain('.xr-text-text-muted { color: var(--xr-semantic-color-textMuted); }')
+    expect(css).toContain('.xr-border-border-strong { border-color: var(--xr-semantic-color-borderStrong); }')
+    expect(css).not.toContain('.xr-bg-primaryHover')
+    expect(css).not.toContain('.xr-text-textMuted')
   })
 })

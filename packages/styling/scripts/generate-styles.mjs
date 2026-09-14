@@ -76,9 +76,10 @@ export function buildStylesheet(tokens, semanticMap = null) {
     const semantic = semanticMap.semantic ?? semanticMap
     for (const alias of Object.keys(semantic.light)) {
       const v = `var(--xr-semantic-color-${alias})`
-      add(`xr-bg-${alias}`, `background-color: ${v}`)
-      add(`xr-text-${alias}`, `color: ${v}`)
-      add(`xr-border-${alias}`, `border-color: ${v}`)
+      const kebab = alias.replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase()
+      add(`xr-bg-${kebab}`, `background-color: ${v}`)
+      add(`xr-text-${kebab}`, `color: ${v}`)
+      add(`xr-border-${kebab}`, `border-color: ${v}`)
     }
   }
 
