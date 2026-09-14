@@ -50,7 +50,7 @@ export function Progress({ value = 0, variant = 'bar', size = 80, stroke = 8, cl
             stroke="var(--xr-semantic-color-primary)"
             strokeWidth={stroke}
             strokeDasharray={circ}
-            strokeDashoffset={reduced ? offset : undefined}
+            strokeDashoffset={offset}
             className="xr-progress__circle"
             style={reduced ? undefined : { transition: 'stroke-dashoffset calc(var(--xr-motion-duration-base) * 1ms) cubic-bezier(var(--xr-motion-easing-standard))' } as CSSProperties}
           />
@@ -69,7 +69,7 @@ export function Progress({ value = 0, variant = 'bar', size = 80, stroke = 8, cl
         aria-valuemax={100}
         aria-label={label}
         className={useClassName({ className }, ['xr-progress', 'xr-progress--mouse'])}
-        style={{ position: 'fixed', pointerEvents: 'none', zIndex: 9999 }}
+        style={{ position: 'fixed', top: 0, left: 0, width: 0, height: 0, pointerEvents: 'none', zIndex: 9999 }}
       >
         <div
           ref={ringRef}
