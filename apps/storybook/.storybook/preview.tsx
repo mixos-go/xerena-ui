@@ -9,12 +9,30 @@ const preview: Preview = {
     layout: 'centered',
     backgrounds: {
       default: 'sand',
-      values: [{ name: 'sand', value: '#faf7f2' }],
+      values: [
+        { name: 'sand', value: '#faf7f2' },
+        { name: 'dark', value: '#1b1712' },
+      ],
     },
   },
+  globalTypes: {
+    darkMode: {
+      description: 'Dark mode',
+      toolbar: {
+        items: [
+          { value: 'light', title: 'Light' },
+          { value: 'dark', title: 'Dark' },
+        ],
+        dynamicTitle: true,
+      },
+    },
+  },
+  initialGlobals: {
+    darkMode: 'light',
+  },
   decorators: [
-    (Story) => (
-      <Provider theme={{ mode: 'light' }}>
+    (Story, { globals }) => (
+      <Provider theme={{ mode: globals.darkMode === 'dark' ? 'dark' : 'light' }}>
         <Story />
       </Provider>
     ),
