@@ -6,7 +6,9 @@ export function useRovingFocus(): {
 } {
   const rovingRef = useRef<HTMLElement | null>(null)
   const handleKeydown = (e: KeyboardEvent<HTMLElement>, items: HTMLElement[]) => {
-    const index = items.indexOf(e.currentTarget as HTMLElement)
+    const active = document.activeElement as HTMLElement | null
+    let index = active ? items.indexOf(active) : -1
+    if (index === -1) index = items.indexOf(e.currentTarget as HTMLElement)
     let next = -1
     if (e.key === 'ArrowDown' || e.key === 'ArrowRight') next = index + 1
     if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') next = index - 1
