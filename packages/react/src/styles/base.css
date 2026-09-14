@@ -129,6 +129,8 @@
   @keyframes xr-spin { to { transform: rotate(360deg); } }
   @media (prefers-reduced-motion: reduce) { .xr-spinner { animation: none; } }
   .xr-progress--pageTop, .xr-progress--pageBottom { z-index: 40; }
+  @keyframes xr-toast-in { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .xr-toast { transition: transform calc(var(--xr-motion-duration-moderate) * 1ms) cubic-bezier(var(--xr-motion-easing-exit)), opacity calc(var(--xr-motion-duration-moderate) * 1ms) cubic-bezier(var(--xr-motion-easing-exit)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
