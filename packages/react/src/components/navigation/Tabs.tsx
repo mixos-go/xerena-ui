@@ -18,10 +18,18 @@ function Trigger({ value, children, disabled, className }: { value: string; chil
   const isSelected = current === value
   const reduced = useReducedMotionSync()
   const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null)
-  useEffect(() => { if (isSelected && ref.current && !reduced) { const r = ref.current.getBoundingClientRect(); const parent = ref.current.parentElement!.getBoundingClientRect(); setIndicator({ left: r.left - parent.left, width: r.width }) } }, [isSelected, reduced])
+  useEffect(() => {
+    if (isSelected && ref.current && !reduced) {
+      const r = ref.current.getBoundingClientRect()
+      const parent = ref.current.parentElement!.getBoundingClientRect()
+      setIndicator({ left: r.left - parent.left, width: r.width })
+    } else {
+      setIndicator(null)
+    }
+  }, [isSelected, reduced])
   return (
     <>
-      <button ref={ref} role="tab" aria-selected={isSelected} aria-controls={`panel-${value}`} disabled={disabled}
+      <button ref={ref} id={`trigger-${value}`} role="tab" aria-selected={isSelected} aria-controls={`panel-${value}`} disabled={disabled}
         className={`xr-tabs__trigger ${isSelected ? 'xr-tabs__trigger--selected' : ''} ${className ?? ''}`}
         onClick={() => onChange(value)}>{children}</button>
       {indicator && <div className="xr-tabs__indicator" style={{ position: 'absolute', bottom: 0, left: indicator.left, width: indicator.width, height: 2, background: 'var(--xr-semantic-color-primary)', transition: reduced ? undefined : 'left calc(var(--xr-motion-duration-moderate) * 1ms) cubic-bezier(var(--xr-motion-easing-standard)), width calc(var(--xr-motion-duration-moderate) * 1ms) cubic-bezier(var(--xr-motion-easing-standard))' }} />}
