@@ -32,6 +32,11 @@ export function Toast({ variant = 'neutral', title, description, action, dismiss
 let root: ReturnType<typeof createRoot> | null = null
 const TOAST_STACK: Map<string, ToastOptions & { id: string }> = new Map()
 let idCounter = 0
+let mode: 'light' | 'dark' = 'light'
+export function setToastThemeMode(next: 'light' | 'dark') {
+  mode = next
+  flush()
+}
 function flush() {
   if (!root) {
     const div = document.createElement('div')
@@ -40,7 +45,7 @@ function flush() {
     root = createRoot(div)
   }
   root?.render(
-    <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8 }}>
+    <div data-xerena-theme={mode} style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8 }}>
       {[...TOAST_STACK.values()].map(t => <Toast key={t.id} {...t} onDismiss={() => { TOAST_STACK.delete(t.id); flush() }} />)}
     </div>,
   )

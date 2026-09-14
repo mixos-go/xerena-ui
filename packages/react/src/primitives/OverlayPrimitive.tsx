@@ -1,6 +1,7 @@
 import { createPortal } from 'react-dom'
 import { useMemo } from 'react'
 import { useDismissable, useFocusTrap } from '../hooks'
+import { useThemeMode } from './ThemeContext'
 import type { ReactNode } from 'react'
 
 export interface OverlayPrimitiveProps {
@@ -14,6 +15,7 @@ export interface OverlayPrimitiveProps {
 export function OverlayPrimitive({ open, onClose, labeledBy, focusTrap = false, children }: OverlayPrimitiveProps) {
   const trapRef = useFocusTrap(open && focusTrap)
   const dismissRef = useDismissable(open, onClose, onClose)
+  const mode = useThemeMode()
   const mergedRef = useMemo(() => (el: HTMLDivElement | null) => {
     trapRef.current = el
     dismissRef.current = el
@@ -28,6 +30,7 @@ export function OverlayPrimitive({ open, onClose, labeledBy, focusTrap = false, 
       aria-modal={focusTrap ? true : undefined}
       aria-labelledby={labeledBy}
       data-xerena-overlay=""
+      data-xerena-theme={mode}
     >
       {children}
     </div>,

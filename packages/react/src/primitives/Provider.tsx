@@ -1,7 +1,8 @@
 import { cssVar } from '@xerena/styling'
 import { semantic as lightSemantic, semanticDark } from '@xerena/tokens'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
+import { setToastThemeMode } from '../components/feedback/Toast'
 import { ThemeContext, type ThemeContextValue, type XTheme } from './ThemeContext'
 import type { SemanticAlias } from '@xerena/tokens'
 
@@ -13,6 +14,10 @@ export interface ProviderProps {
 export function Provider({ children, theme }: ProviderProps) {
   const [stored, setStored] = useState<XTheme>(theme)
   const activeTheme = theme.mode === stored.mode ? { ...stored, ...theme } : stored
+
+  useEffect(() => {
+    setToastThemeMode(activeTheme.mode)
+  }, [activeTheme.mode])
 
   const value = useMemo<ThemeContextValue>(() => {
     const base = activeTheme.mode === 'dark' ? semanticDark.color : lightSemantic.color

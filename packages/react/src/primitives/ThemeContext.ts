@@ -17,3 +17,7 @@ export function useTheme(): ThemeContextValue {
   if (ctx === null) throw new Error('useTheme must be used within <Provider>')
   return ctx
 }
+export function useThemeMode(): ColorMode {
+  const ctx = useContext(ThemeContext)
+  return ctx?.theme.mode ?? 'light'
+}

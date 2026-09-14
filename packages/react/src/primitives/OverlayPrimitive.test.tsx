@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { OverlayPrimitive } from './OverlayPrimitive'
+import { Provider } from './Provider'
 
 describe('OverlayPrimitive', () => {
   it('portals children into body when open and removes on close', () => {
@@ -25,5 +26,23 @@ describe('OverlayPrimitive', () => {
     )
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
     expect(close).toHaveBeenCalled()
+  })
+  it('defaults to light theme outside a Provider', () => {
+    render(
+      <OverlayPrimitive open onClose={() => {}}>
+        <div>o</div>
+      </OverlayPrimitive>,
+    )
+    expect(document.querySelector('[data-xerena-overlay]')).toHaveAttribute('data-xerena-theme', 'light')
+  })
+  it('inherits the Provider theme mode on the portal wrapper', () => {
+    render(
+      <Provider theme={{ mode: 'dark' }}>
+        <OverlayPrimitive open onClose={() => {}}>
+          <div>o</div>
+        </OverlayPrimitive>
+      </Provider>,
+    )
+    expect(document.querySelector('[data-xerena-overlay]')).toHaveAttribute('data-xerena-theme', 'dark')
   })
 })
