@@ -14,9 +14,25 @@ import '@xerena/react/styles/base.css'
 import '@xerena/tokens/tokens.css'
 
 export function App() {
-  return <Provider>…</Provider>
+  return <Provider theme={{ mode: 'light' }}>…</Provider>
 }
 ```
+
+## Components
+
+```tsx
+import { Button, Text, Card } from '@xerena/react'
+import '@xerena/react/styles/base.css'
+```
+
+```tsx
+<Card padding="md">
+  <Text variant="strong">Welcome</Text>
+  <Button variant="primary" onClick={() => undefined}>Get started</Button>
+</Card>
+```
+
+Each component page in the [Components](/guide/components/actions/button) guide documents its import, API, variants, motion, and accessibility.
 
 ## React Native
 
