@@ -1,0 +1,2 @@
+export interface TableContextValue { variant: string; size: string; frozenHeader: boolean }
+export interface SelectionContextValue { selected: Set<string>; toggle: (id: string) => void; isAllSelected: boolean; isIndeterminate: boolean; toggleAll: (ids: string[]) => void }
