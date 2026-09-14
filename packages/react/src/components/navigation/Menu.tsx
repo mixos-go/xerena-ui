@@ -2,26 +2,27 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState } f
 import { OverlayPrimitive, Slot, useReducedMotionSync, useRovingFocus } from '../../primitives'
 import type { KeyboardEvent, ReactElement, ReactNode } from 'react'
 import type { CSSProperties } from 'react'
-const Ctx = createContext<{ open: boolean; setOpen: (o: boolean) => void; openMenu: () => void; lastFocused: HTMLElement | null }>({ open: false, setOpen: () => {}, openMenu: () => {}, lastFocused: null })
+const Ctx = createContext<{ open: boolean; setOpen: (o: boolean) => void; openMenu: () => void; lastFocused: HTMLElement | null; triggerRef: React.RefObject<HTMLElement | null> }>({ open: false, setOpen: () => {}, openMenu: () => {}, lastFocused: null, triggerRef: { current: null } })
 function Root({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false)
   const [lastFocused, setLastFocused] = useState<HTMLElement | null>(null)
+  const triggerRef = useRef<HTMLElement | null>(null)
   const openMenu = useCallback(() => {
     setLastFocused(document.activeElement as HTMLElement | null)
     setOpen(true)
   }, [])
-  return <Ctx.Provider value={{ open, setOpen, openMenu, lastFocused }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ open, setOpen, openMenu, lastFocused, triggerRef }}>{children}</Ctx.Provider>
 }
 function Trigger({ children }: { children: ReactNode }) {
-  const { open, setOpen, openMenu } = useContext(Ctx)
+  const { open, setOpen, openMenu, triggerRef } = useContext(Ctx)
   return (
-    <Slot aria-haspopup="menu" aria-expanded={open} onClick={() => (open ? setOpen(false) : openMenu())}>
+    <Slot ref={triggerRef} aria-haspopup="menu" aria-expanded={open} onClick={() => (open ? setOpen(false) : openMenu())}>
       {children as ReactElement}
     </Slot>
   )
 }
 function Content({ children, className }: { children: ReactNode; className?: string }) {
-  const { open, setOpen, lastFocused } = useContext(Ctx)
+  const { open, setOpen, lastFocused, triggerRef } = useContext(Ctx)
   const reduced = useReducedMotionSync()
   const contentRef = useRef<HTMLDivElement>(null)
   const { handleKeydown } = useRovingFocus()
@@ -48,7 +49,11 @@ function Content({ children, className }: { children: ReactNode; className?: str
   }
   if (!open) return null
   const style: CSSProperties = { background: 'var(--xr-semantic-color-background)', border: '1px solid var(--xr-semantic-color-border)', borderRadius: 'var(--xr-radius-md)', padding: '4px 0', boxShadow: 'var(--xr-elevation-md)', minWidth: 160, animation: reduced ? undefined : `xr-menu-in calc(var(--xr-motion-duration-fast) * 1ms) cubic-bezier(var(--xr-motion-easing-enter))` }
-  return <OverlayPrimitive open onClose={() => setOpen(false)}>
+  return <OverlayPrimitive open onClose={() => setOpen(false)}
+    onOutside={(e) => {
+      if (triggerRef.current && e.target instanceof Node && triggerRef.current.contains(e.target)) return
+      setOpen(false)
+    }}>
     <div ref={contentRef} role="menu" className={`xr-menu xr-menu--open ${className ?? ''}`} style={style} onKeyDown={onKeyDown}>
       {children}
     </div>

@@ -46,7 +46,7 @@ function flush() {
   }
   root?.render(
     <div data-xerena-theme={mode} style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 50, display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {[...TOAST_STACK.values()].map(t => <Toast key={t.id} {...t} onDismiss={() => { TOAST_STACK.delete(t.id); flush() }} />)}
+      {[...TOAST_STACK.values()].map(t => <Toast key={t.id} {...t} onDismiss={() => { const { onDismiss } = t; TOAST_STACK.delete(t.id); flush(); onDismiss?.() }} />)}
     </div>,
   )
 }

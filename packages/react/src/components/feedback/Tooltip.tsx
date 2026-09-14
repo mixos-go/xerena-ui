@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { PreviewPopover, useReducedMotionSync } from '../../primitives'
 
@@ -21,6 +21,7 @@ export function Tooltip({ children, content, position = 'topCenter', delay = 400
     timerRef.current = window.setTimeout(() => setOpen(true), delay)
   }, [delay, reduced])
   const hide = useCallback(() => { clearTimeout(timerRef.current); setOpen(false) }, [])
+  useEffect(() => () => clearTimeout(timerRef.current), [])
   const isTop = position.startsWith('top')
   return (
     <div style={{ display: 'inline-block' }}

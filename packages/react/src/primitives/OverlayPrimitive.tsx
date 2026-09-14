@@ -9,12 +9,13 @@ export interface OverlayPrimitiveProps {
   onClose: () => void
   labeledBy?: string
   focusTrap?: boolean
+  onOutside?: (e: PointerEvent) => void
   children: ReactNode
 }
 
-export function OverlayPrimitive({ open, onClose, labeledBy, focusTrap = false, children }: OverlayPrimitiveProps) {
+export function OverlayPrimitive({ open, onClose, labeledBy, focusTrap = false, onOutside, children }: OverlayPrimitiveProps) {
   const trapRef = useFocusTrap(open && focusTrap)
-  const dismissRef = useDismissable(open, onClose, onClose)
+  const dismissRef = useDismissable(open, onClose, onOutside ?? onClose)
   const mode = useThemeMode()
   const mergedRef = useMemo(() => (el: HTMLDivElement | null) => {
     trapRef.current = el

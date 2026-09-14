@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Menu } from './Menu'
 describe('Menu', () => {
@@ -32,5 +32,14 @@ describe('Menu', () => {
     await user.keyboard('{Escape}')
     expect(screen.queryByRole('menuitem')).not.toBeInTheDocument()
     expect(trigger).toHaveFocus()
+  })
+  it('re-clicking the trigger while open closes the menu', async () => {
+    const user = userEvent.setup()
+    render(<Menu.Root><Menu.Trigger><button>Open</button></Menu.Trigger><Menu.Content><Menu.Item>Item 1</Menu.Item></Menu.Content></Menu.Root>)
+    const trigger = screen.getByRole('button', { name: 'Open' })
+    await user.click(trigger)
+    await screen.findByRole('menuitem')
+    await user.click(trigger)
+    await waitFor(() => expect(screen.queryByRole('menuitem')).not.toBeInTheDocument())
   })
 })

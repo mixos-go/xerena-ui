@@ -3,7 +3,7 @@ import type { RefObject } from 'react'
 export function useDismissable(
   open: boolean,
   onEscape: () => void,
-  onOutside: () => void,
+  onOutside: (e: PointerEvent) => void,
 ): RefObject<HTMLDivElement | null> {
   const ref = useRef<HTMLDivElement | null>(null)
   useEffect(() => {
@@ -13,7 +13,7 @@ export function useDismissable(
     }
     const onPointer = (e: PointerEvent) => {
       const el = ref.current
-      if (el && e.target instanceof Node && !el.contains(e.target)) onOutside()
+      if (el && e.target instanceof Node && !el.contains(e.target)) onOutside(e)
     }
     document.addEventListener('keydown', onKey)
     document.addEventListener('pointerdown', onPointer)

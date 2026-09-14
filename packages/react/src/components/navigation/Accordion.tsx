@@ -13,8 +13,9 @@ function Root({ type = 'single', defaultValue = [], children }: { type?: 'single
   }), [type])
   return <Ctx.Provider value={{ type, expanded, toggle }}>{children}</Ctx.Provider>
 }
-function Item({ children }: { value: string; children: ReactNode }) {
-  return <div className="xr-accordion__item" data-state="open">{children}</div>
+function Item({ value, children }: { value: string; children: ReactNode }) {
+  const { expanded } = useContext(Ctx)
+  return <div className="xr-accordion__item" data-state={expanded.has(value) ? 'open' : 'closed'}>{children}</div>
 }
 function Header({ children }: { children: ReactNode }) { return <h3 className="xr-accordion__header">{children}</h3> }
 function Trigger({ value, children, className }: { value: string; children: ReactNode; className?: string }) {
