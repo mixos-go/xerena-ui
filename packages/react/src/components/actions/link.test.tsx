@@ -12,4 +12,9 @@ describe('Link', () => {
     expect(a).toHaveAttribute('target', '_blank')
     expect(a).toHaveAttribute('rel', 'noopener noreferrer')
   })
+  it('renders asChild via Slot', () => {
+    render(<Link asChild><span>span link</span></Link>)
+    expect(screen.getByText('span link').tagName).toBe('SPAN')
+    expect(screen.getByText('span link')).toHaveClass('xr-link')
+  })
 })

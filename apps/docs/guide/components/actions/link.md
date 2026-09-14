@@ -36,7 +36,7 @@ import { Link } from '@xerena/react'
 
 ## Motion
 
-No runtime motion.
+- CSS hover transition on `.xr-link`: opacity and (animated) transform, using the `fast` duration and `standard` easing.
 
 ## Accessibility
 

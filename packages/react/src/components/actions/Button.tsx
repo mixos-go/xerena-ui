@@ -15,6 +15,8 @@ export interface ButtonProps {
   className?: string
   children: ReactNode
   type?: 'button' | 'submit' | 'reset'
+  value?: string
+  selected?: boolean
 }
 
 const COLORS: Record<string, string> = {
@@ -36,7 +38,7 @@ const TEXT_COLORS: Record<string, string> = {
 
 export function Button({
   variant = 'primary', size = 'md', loading = false, animated, fullWidth, disabled,
-  leftIcon, rightIcon, asChild, className, children, type = 'button', ...rest
+  leftIcon, rightIcon, asChild, className, children, type = 'button', value, selected, ...rest
 }: ButtonProps) {
   const { pressed, onPointerDown, onPointerUp, onPointerLeave } = usePress()
   const { disabled: isDisabled, 'aria-disabled': ariaDisabled } = useDisabled(disabled || loading)
@@ -45,7 +47,7 @@ export function Button({
   const cls = useClassName(
     { className },
     [base, `xr-button--${variant}`, `xr-button--${size}`, isDisabled && 'xr-button--disabled',
-     pressed && 'xr-button--active', fullWidth && 'xr-button--full-width'],
+     pressed && 'xr-button--active', selected && 'xr-button--selected', fullWidth && 'xr-button--full-width'],
   )
   const style: CSSProperties = { backgroundColor: COLORS[variant], color: TEXT_COLORS[variant] }
   const content = asChild ? children : (
@@ -58,7 +60,10 @@ export function Button({
   return (
     <Comp
       type={asChild ? undefined : type}
+      {...rest}
+      data-value={value}
       className={cls}
+      aria-pressed={selected}
       aria-disabled={ariaDisabled}
       aria-busy={loading}
       disabled={isDisabled}
@@ -66,7 +71,6 @@ export function Button({
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerLeave}
       style={style}
-      {...rest}
     >
       {content}
     </Comp>

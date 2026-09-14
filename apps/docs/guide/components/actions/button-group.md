@@ -11,10 +11,10 @@ import { ButtonGroup } from '@xerena/react'
 ## Usage
 
 ```tsx
-<ButtonGroup orientation="horizontal" spacing="sm">
-  <Button size="sm">Day</Button>
-  <Button size="sm" variant="outline">Week</Button>
-  <Button size="sm" variant="outline">Month</Button>
+<ButtonGroup orientation="horizontal" spacing="sm" value={range} onValueChange={setRange}>
+  <Button size="sm" value="day">Day</Button>
+  <Button size="sm" variant="outline" value="week">Week</Button>
+  <Button size="sm" variant="outline" value="month">Month</Button>
 </ButtonGroup>
 ```
 
@@ -24,8 +24,8 @@ import { ButtonGroup } from '@xerena/react'
 |---|---|---|---|
 | `orientation` | `'horizontal' \| 'vertical'` | `'horizontal'` | Flex direction. |
 | `spacing` | `keyof typeof spacing` (spacing tokens) | `'md'` | Gap between buttons in px. |
-| `value` | `string` | — | Optional controlled group value. |
-| `onValueChange` | `(v: string) => void` | — | Value change callback. |
+| `value` | `string` | — | Controlled selection value; the matching child Button becomes selected. |
+| `onValueChange` | `(v: string) => void` | — | Selection callback. |
 | `className` | `string` | — | Extra class names. |
 | `children` | `ReactNode` | required | The buttons to group. |
 
@@ -41,6 +41,7 @@ No runtime motion; a static flex container.
 ## Accessibility
 
 - Renders `role="group"` to associate the buttons semantically.
+- Child Buttons with a `value` participate in selection: the selected one gets `aria-pressed="true"` and the `xr-button--selected` class.
 
 ## See also
 

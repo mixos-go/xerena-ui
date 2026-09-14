@@ -12,7 +12,11 @@ type T = StoryObj<typeof Avatar>
 
 export const Initials: T = { args: { variant: 'initials', initials: 'AB' } }
 export const Image: T = {
-  args: { variant: 'image', src: 'https://i.pravatar.cc/120?img=3', alt: 'User avatar' },
+  args: {
+    variant: 'image',
+    src: 'data:image/svg+xml;utf8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 40 40%22%3E%3Crect width=%2240%22 height=%2240%22 fill=%22%23d9e6ff%22/%3E%3Ctext x=%2220%22 y=%2226%22 text-anchor=%22middle%22 font-family=%22sans-serif%22 font-size=%2216%22 fill=%22%230055ff%22%3EXY%3C/text%3E%3C/svg%3E',
+    alt: 'User avatar',
+  },
 }
 export const Icon: T = { args: { variant: 'icon', icon: '★' } }
 export const Square: T = { args: { variant: 'initials', initials: 'XY', shape: 'square' } }

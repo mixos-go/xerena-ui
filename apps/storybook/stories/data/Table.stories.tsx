@@ -126,6 +126,7 @@ export const ExpandableRows: T = {
     <Table>
       <Head>
         <Row>
+          <Cell as="th" />
           <Cell as="th">Name</Cell>
           <Cell as="th">Status</Cell>
         </Row>

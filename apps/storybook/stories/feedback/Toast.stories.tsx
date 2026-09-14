@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from '@storybook/react'
-import { Button, Stack, toast } from '@xerena/react'
+import { Button, Stack, Toast, toast } from '@xerena/react'
 
-const meta: Meta<typeof Button> = {
+const meta: Meta<typeof Toast> = {
   title: 'Feedback/Toast',
-  component: Button,
+  component: Toast,
   tags: ['autodocs'],
 }
 
 export default meta
-type T = StoryObj<typeof Button>
+type T = StoryObj<typeof Toast>
 
 const Trigger = ({ label, onClick }: { label: string; onClick: () => void }) => (
   <Button onClick={onClick}>{label}</Button>

@@ -54,11 +54,13 @@
   .xr-button--active { transform: scale(0.98); }
   .xr-button--animated:hover { transform: translateY(-1px); }
   .xr-button--animated.xr-button--active { transform: scale(0.96); }
+  .xr-button--selected { outline: 2px solid var(--xr-semantic-color-primary); outline-offset: -2px; }
   .xr-button__icon { display: inline-flex; }
   .xr-iconbutton { padding: 0; width: 40px; height: 40px; }
   .xr-iconbutton--sm { width: 32px; height: 32px; }
   .xr-iconbutton--lg { width: 48px; height: 48px; }
-  .xr-link { color: var(--xr-semantic-color-primary); text-decoration: none; }
+  .xr-link { color: var(--xr-semantic-color-primary); text-decoration: none; transition: opacity calc(var(--xr-motion-duration-fast) * 1ms) cubic-bezier(var(--xr-motion-easing-standard)), transform calc(var(--xr-motion-duration-fast) * 1ms) cubic-bezier(var(--xr-motion-easing-standard)); }
+  .xr-link:hover { opacity: 0.8; }
   .xr-link--animated { position: relative; text-decoration: underline; text-decoration-color: var(--xr-semantic-color-primary); text-underline-offset: 4px; }
   .xr-link--muted { color: var(--xr-semantic-color-textMuted); }
   .xr-button-group--vertical { align-items: stretch; }
