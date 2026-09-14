@@ -88,6 +88,20 @@
   .xr-switch--focus { box-shadow: 0 0 0 3px var(--xr-semantic-color-primary); }
   .xr-switch__thumb { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: var(--xr-radius-full); background: white; box-shadow: var(--xr-elevation-xs); transition: transform calc(var(--xr-motion-duration-base) * 1ms) cubic-bezier(var(--xr-motion-easing-standard)); }
   .xr-switch--sm .xr-switch__thumb { width: 14px; height: 14px; }
+  .xr-slider { touch-action: none; user-select: none; }
+  .xr-combobox__list { list-style: none; padding: 0; margin: 0; border: 1px solid var(--xr-semantic-color-border); border-radius: calc(var(--xr-radius-md) * 1px); max-height: 240px; overflow: auto; background: var(--xr-semantic-color-background); }
+  .xr-combobox__option { padding: calc(var(--xr-spacing-2) * 1px) calc(var(--xr-spacing-3) * 1px); cursor: pointer; }
+  .xr-combobox__option:hover, .xr-combobox__option[aria-selected="true"] { background: var(--xr-semantic-color-surfaceHover); }
+  .xr-combobox__input--focus { border-color: var(--xr-semantic-color-primary); }
+  .xr-combobox__clear { background: none; border: none; cursor: pointer; font-size: 16px; padding-inline: calc(var(--xr-spacing-1) * 1px); }
+  .xr-input-group > input { flex: 1; border: none; padding-inline: calc(var(--xr-spacing-3) * 1px); height: 40px; }
+  .xr-input-group > input:focus-visible { outline: none; }
+  .xr-number-input { border: 1px solid var(--xr-semantic-color-border); border-radius: calc(var(--xr-radius-md) * 1px); height: 40px; }
+  .xr-number-input__btn { width: 40px; height: 40px; border: none; background: var(--xr-semantic-color-surface); cursor: pointer; font-weight: 600; color: var(--xr-semantic-color-text); transition: background-color calc(var(--xr-motion-duration-instant) * 1ms); }
+  .xr-number-input__btn:disabled { opacity: 0.5; cursor: default; }
+  .xr-number-input__btn:hover:not(:disabled) { background: var(--xr-semantic-color-surfaceHover); }
+  .xr-radiogroup { gap: calc(var(--xr-spacing-2) * 1px); }
+  .xr-checkbox-group { gap: calc(var(--xr-spacing-2) * 1px); display: flex; flex-direction: column; }
 }
 
 @media (prefers-reduced-motion: reduce) {
