@@ -121,6 +121,14 @@
   .xr-pagination button:disabled { opacity: 0.4; cursor: default; }
   .xr-pagination__page { transition: background-color calc(var(--xr-motion-duration-fast) * 1ms) cubic-bezier(var(--xr-motion-easing-standard)), color calc(var(--xr-motion-duration-fast) * 1ms) cubic-bezier(var(--xr-motion-easing-standard)); }
   .xr-pagination--simple span { margin-inline: 4px 8px; }
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
+  .xr-spinner { display: block; border: 2px solid var(--xr-semantic-color-border); border-top-color: var(--xr-semantic-color-primary); border-radius: var(--xr-radius-full); animation: xr-spin 0.8s linear infinite; }
+  .xr-spinner--sm { width: 16px; height: 16px; }
+  .xr-spinner--md { width: 24px; height: 24px; }
+  .xr-spinner--lg { width: 40px; height: 40px; }
+  @keyframes xr-spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .xr-spinner { animation: none; } }
+  .xr-progress--pageTop, .xr-progress--pageBottom { z-index: 40; }
 }
 
 @media (prefers-reduced-motion: reduce) {
