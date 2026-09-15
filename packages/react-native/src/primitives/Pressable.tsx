@@ -18,6 +18,7 @@ export function Pressable({
   onHoverOut,
   onFocus,
   onBlur,
+  accessibilityState,
   children,
   ...rest
 }: PressableProps) {
@@ -37,7 +38,7 @@ export function Pressable({
   return (
     <RNPressable
       disabled={isDisabled}
-      accessibilityState={{ disabled: !!disabled, busy: !!loading }}
+      accessibilityState={{ disabled: !!disabled, busy: !!loading, ...accessibilityState }}
       {...rest}
       onPress={isDisabled ? undefined : onPress}
       {...handlers}
