@@ -1,12 +1,13 @@
 import { forwardRef } from 'react'
 import type { ReactNode } from 'react'
-import { Pressable as RNPressable, type PressableProps as RNPressableProps, View } from 'react-native'
+import { Pressable as RNPressable, type PressableProps as RNPressableProps, View, type PressableStateCallbackType } from 'react-native'
 import { usePressable } from '../hooks/usePressable'
 import type { PressableState } from '../hooks/usePressable'
 
-export interface PressableProps extends Omit<RNPressableProps, 'children'> {
+export interface PressableProps extends Omit<RNPressableProps, 'children' | 'style'> {
   loading?: boolean
   children?: ReactNode | ((state: PressableState) => ReactNode)
+  style?: RNPressableProps['style'] | ((state: PressableStateCallbackType) => RNPressableProps['style'])
 }
 
 const Pressable = forwardRef<View, PressableProps>(
@@ -23,6 +24,7 @@ const Pressable = forwardRef<View, PressableProps>(
       onBlur,
       accessibilityState,
       children,
+      style,
       ...rest
     },
     ref,
@@ -40,6 +42,10 @@ const Pressable = forwardRef<View, PressableProps>(
 
     const isDisabled = !!(disabled || loading)
 
+    const resolvedStyle = typeof style === 'function'
+      ? style({ pressed, hovered, focused } as PressableStateCallbackType)
+      : style
+
     return (
       <RNPressable
         ref={ref}
@@ -48,6 +54,7 @@ const Pressable = forwardRef<View, PressableProps>(
         {...rest}
         onPress={isDisabled ? undefined : onPress}
         {...handlers}
+        style={resolvedStyle}
       >
         {typeof children === 'function' ? children({ pressed, hovered, focused }) : children}
       </RNPressable>
