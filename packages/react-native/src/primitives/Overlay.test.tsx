@@ -1,4 +1,5 @@
-import { Modal, Pressable, Text } from 'react-native'
+import { Modal, Pressable, Text, View } from 'react-native'
+import type { ViewProps } from 'react-native'
 import { act, render, screen } from '@testing-library/react-native'
 import { Provider } from './Provider'
 import { Overlay } from './Overlay'
@@ -126,5 +127,24 @@ describe('Overlay', () => {
     expect(backdrop.props.style).toEqual(
       expect.arrayContaining([expect.objectContaining({ backgroundColor: 'rgba(255, 0, 0, 0.4)' })]),
     )
+  })
+
+  it('content View has accessibilityViewIsModal=true', () => {
+    render(
+      <Provider theme={{ mode: 'light' }}>
+        <Overlay open onClose={jest.fn()}>
+          <Text>overlay content</Text>
+        </Overlay>
+      </Provider>,
+    )
+    act(() => {
+      jest.runAllTimers()
+    })
+    const modal = screen.UNSAFE_getByType(Modal)
+    const contentView = modal.findAllByType(View).find(
+      (v: React.ReactElement<ViewProps>) => v.props.accessibilityViewIsModal === true
+    )
+    expect(contentView).toBeDefined()
+    expect(contentView?.props.accessibilityViewIsModal).toBe(true)
   })
 })

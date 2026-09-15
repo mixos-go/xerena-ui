@@ -50,7 +50,8 @@ describe('Message', () => {
     const message = screen.getByRole('alert')
     const style = StyleSheet.flatten(message.props.style)
     expect(style.bottom).toBe(16)
-    expect(style.left).toBe('50%')
+    expect(style.left).toBe(0)
+    expect(style.right).toBe(0)
   })
 
   it('uses semantic background and border colors', () => {

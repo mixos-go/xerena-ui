@@ -125,7 +125,7 @@ function DrawerContent({
       }
     }
     wasOpen.current = open
-  }, [open, s, sz, dimension, reduced, animate, translateX, translateY, opacity])
+  }, [open, s, sz, reduced, animate])
 
   const containerStyle: ViewStyle = {
     backgroundColor: colors.background,

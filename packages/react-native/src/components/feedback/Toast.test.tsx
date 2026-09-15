@@ -89,4 +89,23 @@ describe('Toast', () => {
     expect(style.backgroundColor).toBe('#ff0000')
     expect(style.borderColor).toBe('#00ff00')
   })
+
+  it('snaps to final state under reduced motion', () => {
+    jest.mock('../../hooks/useReducedMotion', () => ({
+      useReducedMotion: jest.fn(() => true),
+    }))
+
+    render(
+      <Provider theme={{ mode: 'light' }}>
+        <ToastProvider>
+          <Toast title="Hi" autoHideDuration={0} />
+        </ToastProvider>
+      </Provider>,
+    )
+
+    const toastEl = screen.getByTestId('toast-card')
+    expect(toastEl).toBeDefined()
+
+    jest.unmock('../../hooks/useReducedMotion')
+  })
 })

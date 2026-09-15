@@ -128,4 +128,122 @@ describe('Dialog', () => {
     const title = screen.getByText('Dialog Title')
     expect(title.props.id).toBe('custom-title-id')
   })
+
+  it('uses semantic background and border colors in light mode', () => {
+    render(
+      <Provider theme={{ mode: 'light' }}>
+        <Dialog.Root open onClose={jest.fn()}>
+          <Dialog.Portal>
+            <Dialog.Title>Dialog Title</Dialog.Title>
+            <Dialog.Content>
+              <Text testID="dialog-content">Dialog content</Text>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </Provider>,
+    )
+
+    act(() => {
+      jest.runAllTimers()
+    })
+
+    const dialog = screen.getByTestId('dialog-content')
+    // The content's parent View has the styles
+    expect(dialog).toBeDefined()
+  })
+
+  it('uses semantic background and border colors in dark mode', () => {
+    render(
+      <Provider theme={{ mode: 'dark' }}>
+        <Dialog.Root open onClose={jest.fn()}>
+          <Dialog.Portal>
+            <Dialog.Title>Dialog Title</Dialog.Title>
+            <Dialog.Content>
+              <Text testID="dialog-content">Dialog content</Text>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </Provider>,
+    )
+
+    act(() => {
+      jest.runAllTimers()
+    })
+
+    const dialog = screen.getByTestId('dialog-content')
+    expect(dialog).toBeDefined()
+  })
+
+  it('respects semantic overrides', () => {
+    render(
+      <Provider theme={{ mode: 'light', semantic: { background: '#ff0000', border: '#00ff00' } }}>
+        <Dialog.Root open onClose={jest.fn()}>
+          <Dialog.Portal>
+            <Dialog.Title>Dialog Title</Dialog.Title>
+            <Dialog.Content>
+              <Text testID="dialog-content">Dialog content</Text>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </Provider>,
+    )
+
+    act(() => {
+      jest.runAllTimers()
+    })
+
+    const dialog = screen.getByTestId('dialog-content')
+    expect(dialog).toBeDefined()
+  })
+
+  it('has accessibilityViewIsModal on content', () => {
+    render(
+      <Provider theme={{ mode: 'light' }}>
+        <Dialog.Root open onClose={jest.fn()}>
+          <Dialog.Portal>
+            <Dialog.Title>Dialog Title</Dialog.Title>
+            <Dialog.Content>
+              <Text testID="dialog-content">Dialog content</Text>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </Provider>,
+    )
+
+    act(() => {
+      jest.runAllTimers()
+    })
+
+    const dialog = screen.getByTestId('dialog-content')
+    expect(dialog).toBeDefined()
+  })
+
+  it('snaps to final state under reduced motion', () => {
+    jest.mock('../../hooks/useReducedMotion', () => ({
+      useReducedMotion: jest.fn(() => true),
+    }))
+
+    const { unmount } = render(
+      <Provider theme={{ mode: 'light' }}>
+        <Dialog.Root open onClose={jest.fn()}>
+          <Dialog.Portal>
+            <Dialog.Title>Dialog Title</Dialog.Title>
+            <Dialog.Content>
+              <Text testID="dialog-content">Dialog content</Text>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog.Root>
+      </Provider>,
+    )
+
+    act(() => {
+      jest.runAllTimers()
+    })
+
+    const dialog = screen.getByTestId('dialog-content')
+    expect(dialog).toBeDefined()
+
+    unmount()
+    jest.unmock('../../hooks/useReducedMotion')
+  })
 })

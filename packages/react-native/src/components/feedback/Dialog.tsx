@@ -87,11 +87,14 @@ function DialogTitle({ id, children }: { id?: string; children: ReactNode }) {
     return () => setLabelledBy(undefined)
   }, [titleId, setLabelledBy])
 
-  return <Text id={titleId} style={styles.title}>{children}</Text>
+  const colors = useNativeColors()
+
+  return <Text id={titleId} style={[styles.title, { color: colors.text }]}>{children}</Text>
 }
 
 function DialogDescription({ id, children }: { id?: string; children: ReactNode }) {
-  return <Text id={id} style={styles.description}>{children}</Text>
+  const colors = useNativeColors()
+  return <Text id={id} style={[styles.description, { color: colors.textMuted }]}>{children}</Text>
 }
 
 import { type ViewStyle } from 'react-native'
@@ -102,9 +105,10 @@ function DialogContent({ children, style }: { children: ReactNode; style?: ViewS
 
 function DialogClose({ children = '✕', style }: { children?: ReactNode; style?: ViewStyle }) {
   const { onClose } = useContext(DialogContext)
+  const colors = useNativeColors()
   return (
     <Pressable accessibilityLabel="Close" accessibilityRole="button" onPress={onClose} style={[styles.close, style]}>
-      <Text style={{ color: '#9a8f7e' }}>{children}</Text>
+      <Text style={{ color: colors.textMuted }}>{children}</Text>
     </Pressable>
   )
 }
@@ -142,12 +146,10 @@ const styles = StyleSheet.create({
   },
   title: {
     ...display.xs,
-    color: '#2b2620',
     marginBottom: spacing[2],
   },
   description: {
     ...body.md,
-    color: '#7c7263',
     marginBottom: spacing[4],
   },
   close: {

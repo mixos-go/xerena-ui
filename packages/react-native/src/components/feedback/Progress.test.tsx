@@ -135,11 +135,31 @@ describe('Progress', () => {
   })
 
   it('snaps to final value under reduced motion', () => {
-    // This test needs to use a Provider that forces reduced motion
-    // Since useReducedMotion is mocked at module level to return false,
-    // we need to re-render with a different mock. For simplicity, we test
-    // the reduced motion behavior by checking the component logic directly.
-    // The reduced motion behavior is tested in useNativeMotion tests.
-    expect(true).toBe(true)
+    jest.mock('../../hooks/useReducedMotion', () => ({
+      useReducedMotion: jest.fn(() => true),
+    }))
+
+    const { unmount } = render(
+      <Provider theme={{ mode: 'light' }}>
+        <Progress value={75} />
+      </Provider>,
+    )
+
+    act(() => {
+      jest.runAllTimers()
+    })
+
+    const bar = screen.getByRole('progressbar')
+    const fill = bar.findByProps({ testID: 'progress-fill' })
+    const style = StyleSheet.flatten(fill.props.style)
+    // Under reduced motion, the animated value should be set directly to final value
+    // The transform contains an AnimatedValue; check its _value property
+    const transform = style.transform[0]
+    const scaleX = transform.scaleX
+    // AnimatedValue has _value property with the current value
+    expect(typeof scaleX === 'object' ? scaleX._value : scaleX).toBe(0.75)
+
+    unmount()
+    jest.unmock('../../hooks/useReducedMotion')
   })
 })
