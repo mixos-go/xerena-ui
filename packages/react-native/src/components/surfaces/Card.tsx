@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { Animated, View, type ViewStyle } from 'react-native'
 import { semantic } from '@xerena/tokens'
-import { Pressable } from '../../primitives/Pressable'
+import { Pressable, type PressableState } from '../../primitives/Pressable'
 import { useNativeColors } from '../../hooks/useNativeColors'
 import { useNativeMotion } from '../../hooks/useNativeMotion'
 import { nativeElevation } from '../../styles/elevation'
@@ -69,7 +69,7 @@ export function Card({ variant = 'outlined', padding = 'md', children, onPress, 
   if (variant === 'interactive') {
     return (
       <Pressable testID={testID} onPress={onPress} accessibilityRole="button" accessibilityState={{ disabled: false }}>
-        {({ pressed }) => <AnimatedCard pressed={pressed} baseStyle={baseStyle}>{children}</AnimatedCard>}
+        {({ pressed }: PressableState) => <AnimatedCard pressed={pressed} baseStyle={baseStyle}>{children}</AnimatedCard>}
       </Pressable>
     )
   }

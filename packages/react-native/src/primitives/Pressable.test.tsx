@@ -1,6 +1,6 @@
 import { Text } from 'react-native'
 import { fireEvent, render, screen } from '@testing-library/react-native'
-import { Pressable } from './Pressable'
+import { Pressable, type PressableState } from './Pressable'
 
 describe('Pressable', () => {
   it('renders children', () => {
@@ -48,7 +48,7 @@ describe('Pressable', () => {
   it('exposes pressed state to children function', () => {
     render(
       <Pressable testID="pressable">
-        {({ pressed }) => <Text testID="state">{pressed ? 'pressed' : 'idle'}</Text>}
+        {({ pressed }: PressableState) => <Text testID="state">{pressed ? 'pressed' : 'idle'}</Text>}
       </Pressable>,
     )
     expect(screen.getByTestId('state').children[0]).toBe('idle')

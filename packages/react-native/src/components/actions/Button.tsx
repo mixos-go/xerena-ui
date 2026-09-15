@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
 import { Animated, Text, type ViewStyle } from 'react-native'
-import { Pressable } from '../../primitives/Pressable'
+import { Pressable, type PressableState } from '../../primitives/Pressable'
 import { useNativeColors } from '../../hooks/useNativeColors'
 import { useNativeMotion } from '../../hooks/useNativeMotion'
 import { semantic } from '@xerena/tokens'
@@ -136,7 +136,7 @@ export function Button({
       style={containerStyle}
       {...rest}
     >
-      {({ pressed }) => (
+      {({ pressed }: PressableState) => (
         <AnimatedContent pressed={pressed} animated={animated}>
           {leftIcon}
           {typeof children === 'string' || typeof children === 'number' ? (
