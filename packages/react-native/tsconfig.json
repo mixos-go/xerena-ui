@@ -1,4 +1,14 @@
 {
   "extends": "../../tools/tsconfig/tsconfig.rn.json",
-  "include": ["src"]
+  "include": ["src"],
+  "compilerOptions": {
+    "rootDir": "src",
+    "paths": {
+      "@xerena/tokens": ["../tokens/dist/index.d.ts"],
+      "@xerena/react": ["../react/src/index.ts"],
+      "@xerena/native": ["./src/index.ts"],
+      "@xerena/styling": ["../styling/src/index.ts"],
+      "@xerena/styling/react": ["../styling/src/react/index.ts"]
+    }
+  }
 }

@@ -1,25 +1,21 @@
-import { Fragment, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Text } from 'react-native'
+import { resolvePalette } from '../styles/palette'
 import { ThemeContext, type ThemeContextValue, type XTheme } from './ThemeContext'
 
 export interface ProviderProps {
   children: ReactNode
-  initialMode?: 'light' | 'dark'
+  theme: XTheme
 }
 
-export function Provider({ children, initialMode = 'light' }: ProviderProps) {
-  const [theme, setTheme] = useState<XTheme>({ mode: initialMode })
+export function Provider({ children, theme }: ProviderProps) {
+  const [stored, setStored] = useState<XTheme>(theme)
+  const activeTheme = theme.mode === stored.mode ? { ...stored, ...theme } : stored
 
-  const value = useMemo<ThemeContextValue>(
-    () => ({ theme, setTheme }),
-    [theme],
-  )
+  const value = useMemo<ThemeContextValue>(() => {
+    const semantic = resolvePalette(activeTheme)
+    return { theme: activeTheme, setTheme: (t) => setStored(t), semantic }
+  }, [activeTheme])
 
-  return (
-    <Fragment>
-      <Text>{`xerena-theme:${theme.mode}`}</Text>
-      <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
-    </Fragment>
-  )
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
 }
