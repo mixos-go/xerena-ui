@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { BackHandler } from 'react-native'
 
 export interface UseDismissableOptions {
@@ -15,22 +15,29 @@ export interface UseDismissableResult {
 }
 
 export function useDismissable({ open, onDismiss }: UseDismissableOptions): UseDismissableResult {
+  const onDismissRef = useRef(onDismiss)
+  onDismissRef.current = onDismiss
+
   const onRequestClose = useCallback(() => {
-    if (open) onDismiss()
-  }, [open, onDismiss])
+    if (open) onDismissRef.current()
+  }, [open])
 
   useEffect(() => {
     if (!open) return
     const subscription = BackHandler.addEventListener('hardwareBackPress', () => {
-      onDismiss()
+      onDismissRef.current()
       return true
     })
     return () => subscription.remove()
-  }, [open, onDismiss])
+  }, [open])
+
+  const onResponderRelease = useCallback(() => {
+    if (open) onDismissRef.current()
+  }, [open])
 
   const backdropProps = {
     onStartShouldSetResponder: () => true,
-    onResponderRelease: () => onDismiss(),
+    onResponderRelease,
   }
 
   return { onRequestClose, backdropProps }

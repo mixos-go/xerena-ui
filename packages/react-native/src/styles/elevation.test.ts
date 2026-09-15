@@ -17,8 +17,11 @@ describe('nativeElevation', () => {
   })
 
   it('returns empty style for 0 none', () => {
+    const original = elevation.xs
+    Object.defineProperty(elevation, 'xs', { value: '0 none', configurable: true })
     setPlatform('ios')
-    expect(nativeElevation('none')).toEqual({})
+    expect(nativeElevation('xs')).toEqual({})
+    Object.defineProperty(elevation, 'xs', { value: original, configurable: true })
   })
 
   it('parses actual xs token on iOS using deepest blur layer', () => {
