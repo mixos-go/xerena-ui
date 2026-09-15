@@ -55,7 +55,7 @@ describe('Badge', () => {
       <Badge testID="badge" tone="brand">
         Override
       </Badge>,
-      { wrapper: wrapper({ semantic: { primary: override } }) },
+      { wrapper: wrapper({ mode: 'light', semantic: { primary: override } }) },
     )
     expect(screen.getByTestId('badge')).toHaveStyle({ backgroundColor: override })
   })

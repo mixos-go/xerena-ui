@@ -1,5 +1,5 @@
 import { Children, cloneElement, isValidElement } from 'react'
-import type { ReactElement, ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { View, type ViewStyle } from 'react-native'
 import { semantic } from '@xerena/tokens'
 
@@ -27,9 +27,9 @@ export function Grid({ columns, gap: g = 'md', auto, as: Comp = View, children, 
       : {}
 
   const enhanced = Children.map(children, (child) => {
-    if (!isValidElement(child)) return child
-    return cloneElement(child as ReactElement<{ style?: ViewStyle }>, {
-      style: [childStyle, child.props.style],
+    if (!isValidElement<{ style?: ViewStyle }>(child)) return child
+    return cloneElement(child, {
+      style: { ...childStyle, ...child.props.style },
     })
   })
 

@@ -1,6 +1,6 @@
 import { Text } from 'react-native'
 import { fireEvent, render, screen } from '@testing-library/react-native'
-import { semantic, semanticDark } from '@xerena/tokens'
+import { semanticDark } from '@xerena/tokens'
 import { Provider } from '../../primitives/Provider'
 import { Avatar } from './Avatar'
 

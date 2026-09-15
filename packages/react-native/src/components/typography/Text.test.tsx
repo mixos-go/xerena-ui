@@ -1,4 +1,4 @@
-import { Text as RNText, View } from 'react-native'
+import { Text as RNText } from 'react-native'
 import { render, screen } from '@testing-library/react-native'
 import { semantic, semanticDark } from '@xerena/tokens'
 import { Provider } from '../../primitives/Provider'

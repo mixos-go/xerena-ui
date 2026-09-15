@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Animated, View, type ViewStyle } from 'react-native'
+import { Animated, View, type DimensionValue, type ViewStyle } from 'react-native'
 import { useNativeColors } from '../../hooks/useNativeColors'
 import { useNativeMotion } from '../../hooks/useNativeMotion'
 import { radius } from '../../styles/radius'
@@ -39,8 +39,8 @@ export function Skeleton({ shape = 'line', width, height, style, testID }: Skele
       testID={testID}
       style={[
         {
-          width,
-          height,
+          width: width as DimensionValue,
+          height: height as DimensionValue,
           backgroundColor: colors.surface,
           borderRadius,
           overflow: 'hidden',

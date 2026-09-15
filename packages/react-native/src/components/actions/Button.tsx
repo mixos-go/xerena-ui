@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
-import { Animated, StyleSheet, Text, View, type ViewStyle } from 'react-native'
+import { Animated, Text, type ViewStyle } from 'react-native'
 import { Pressable } from '../../primitives/Pressable'
 import { useNativeColors } from '../../hooks/useNativeColors'
 import { useNativeMotion } from '../../hooks/useNativeMotion'
@@ -78,13 +78,16 @@ export function Button({
   leftIcon,
   rightIcon,
   children,
-  type,
-  value,
+  type: _type,
+  value: _value,
   selected,
   onPress,
   testID,
   ...rest
 }: ButtonProps) {
+  void _type
+  void _value
+
   const colors = useNativeColors()
   const s = SIZE[size]
 

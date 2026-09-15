@@ -20,9 +20,9 @@ describe('Grid', () => {
     )
     expect(screen.getByTestId('grid')).toHaveStyle({ flexDirection: 'row', flexWrap: 'wrap' })
     expect(screen.getByTestId('grid')).toHaveStyle({ gap: semantic.spacing.md })
-    expect(screen.getByTestId('child').parent?.props.style).toEqual(
-      expect.arrayContaining([expect.objectContaining({ flexBasis: expect.stringMatching(/^33\.33/) })]),
-    )
+    expect(screen.getByTestId('child').parent?.props.style).toMatchObject({
+      flexBasis: expect.stringMatching(/^33\.33/),
+    })
   })
 
   it('renders auto grid', () => {
@@ -32,9 +32,7 @@ describe('Grid', () => {
       </Grid>,
       { wrapper: wrapper() },
     )
-    expect(screen.getByTestId('child').parent?.props.style).toEqual(
-      expect.arrayContaining([expect.objectContaining({ flex: 1 })]),
-    )
+    expect(screen.getByTestId('child').parent?.props.style).toMatchObject({ flex: 1 })
   })
 
   it('renders with as prop', () => {

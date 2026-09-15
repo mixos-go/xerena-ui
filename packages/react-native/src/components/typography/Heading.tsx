@@ -21,7 +21,7 @@ export function Heading({ as = 'h2', style, children, ...rest }: HeadingProps) {
   const colors = useNativeColors()
 
   if (typeof as === 'string' && as in SIZE_MAP) {
-    const size = SIZE_MAP[as]
+    const size = SIZE_MAP[as as keyof typeof SIZE_MAP] as keyof typeof display
     return (
       <RNText style={[display[size], { color: colors.text }, style]} {...rest}>
         {children}

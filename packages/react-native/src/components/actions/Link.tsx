@@ -14,7 +14,11 @@ export interface LinkProps {
   testID?: string
 }
 
-export function Link({ variant = 'default', href, target, rel, children, accessibilityLabel, testID, ...rest }: LinkProps) {
+export function Link({ variant = 'default', href: _href, target: _target, rel: _rel, children, accessibilityLabel, testID, ...rest }: LinkProps) {
+  void _href
+  void _target
+  void _rel
+
   const colors = useNativeColors()
 
   const colorMap: Record<NonNullable<LinkProps['variant']>, string> = {

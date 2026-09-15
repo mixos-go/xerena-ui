@@ -22,7 +22,7 @@ export function ButtonGroup({
   children,
   testID,
 }: ButtonGroupProps) {
-  const [current, setCurrent] = useControllableState<string | undefined>(value, undefined, onValueChange)
+  const [current, setCurrent] = useControllableState<string>(value, undefined, onValueChange)
 
   const style: ViewStyle = {
     flexDirection: orientation === 'vertical' ? 'column' : 'row',
