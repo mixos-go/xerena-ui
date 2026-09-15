@@ -29,3 +29,12 @@ export { Grid, type GridProps } from './components/layout/Grid'
 
 export { Card, type CardProps } from './components/surfaces/Card'
 export { Avatar, type AvatarProps } from './components/surfaces/Avatar'
+
+export { Spinner, type SpinnerProps } from './components/feedback/Spinner'
+export { Progress, type ProgressProps } from './components/feedback/Progress'
+export { Message, type MessageProps } from './components/feedback/Message'
+export { Toast, type ToastOptions, ToastProvider, toast } from './components/feedback/Toast'
+export { Tooltip, type TooltipProps } from './components/feedback/Tooltip'
+export { Dialog, type DialogRootProps, type DialogPortalProps, type DialogContentProps, type DialogCloseProps, type DialogTitleProps, type DialogDescriptionProps } from './components/feedback/Dialog'
+export { Drawer, type DrawerRootProps, type DrawerTriggerProps, type DrawerContentProps } from './components/feedback/Drawer'
+export { Popover, type PopoverRootProps, type PopoverTriggerProps, type PopoverContentProps } from './components/feedback/Popover'
