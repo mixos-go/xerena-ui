@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native'
+import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { semantic, semanticDark } from '@xerena/tokens'
 import { Provider } from '../../primitives/Provider'
 import { Card } from './Card'
@@ -10,6 +10,9 @@ function wrapper(theme: { mode: 'light' | 'dark' } = { mode: 'light' }) {
 }
 
 describe('Card', () => {
+  beforeEach(() => jest.useFakeTimers())
+  afterEach(() => jest.useRealTimers())
+
   it.each([
     ['outlined', semantic.color.background, semantic.color.border],
     ['elevated', semantic.color.background, undefined],
@@ -46,7 +49,10 @@ describe('Card', () => {
       </Card>,
       { wrapper: wrapper() },
     )
-    fireEvent.press(screen.getByTestId('card'))
+    act(() => {
+      fireEvent.press(screen.getByTestId('card'))
+      jest.runOnlyPendingTimers()
+    })
     expect(onPress).toHaveBeenCalledTimes(1)
   })
 
