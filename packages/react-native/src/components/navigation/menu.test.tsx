@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native'
-import { Text } from 'react-native'
+import { Modal, Pressable, Text } from 'react-native'
 import { Provider } from '../../primitives/Provider'
 import { Menu } from './Menu'
 
@@ -83,13 +83,32 @@ describe('Menu', () => {
     expect(screen.queryByText('Item 1')).toBeNull()
   })
 
-  it('supports disabled items', () => {
+  it('calls onSelect when an item is pressed', () => {
+    const onSelect = jest.fn()
     render(
       <Menu.Root testID="menu-root">
         <Menu.Trigger testID="trigger"><Text>Open Menu</Text></Menu.Trigger>
         <Menu.Content testID="content">
-          <Menu.Item disabled>Disabled Item</Menu.Item>
-          <Menu.Item>Enabled Item</Menu.Item>
+          <Menu.Item onSelect={onSelect}>Item 1</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+      { wrapper: wrapper() },
+    )
+    fireEvent.press(screen.getByTestId('trigger'))
+    jest.runAllTimers()
+    fireEvent.press(screen.getByText('Item 1'))
+    jest.runAllTimers()
+    expect(onSelect).toHaveBeenCalledTimes(1)
+    expect(screen.queryByText('Item 1')).toBeNull()
+  })
+
+  it('does not call onSelect for disabled items', () => {
+    const onSelect = jest.fn()
+    render(
+      <Menu.Root testID="menu-root">
+        <Menu.Trigger testID="trigger"><Text>Open Menu</Text></Menu.Trigger>
+        <Menu.Content testID="content">
+          <Menu.Item disabled onSelect={onSelect}>Disabled Item</Menu.Item>
         </Menu.Content>
       </Menu.Root>,
       { wrapper: wrapper() },
@@ -97,7 +116,10 @@ describe('Menu', () => {
     fireEvent.press(screen.getByTestId('trigger'))
     jest.runAllTimers()
     expect(screen.getByText('Disabled Item')).toBeTruthy()
-    expect(screen.getByText('Enabled Item')).toBeTruthy()
+    fireEvent.press(screen.getByText('Disabled Item'))
+    jest.runAllTimers()
+    expect(onSelect).not.toHaveBeenCalled()
+    expect(screen.getByText('Disabled Item')).toBeTruthy()
   })
 
   it('renders separator', () => {
@@ -106,7 +128,7 @@ describe('Menu', () => {
         <Menu.Trigger testID="trigger"><Text>Open Menu</Text></Menu.Trigger>
         <Menu.Content testID="content">
           <Menu.Item>Item 1</Menu.Item>
-          <Menu.Separator />
+          <Menu.Separator testID="sep" />
           <Menu.Item>Item 2</Menu.Item>
         </Menu.Content>
       </Menu.Root>,
@@ -114,8 +136,8 @@ describe('Menu', () => {
     )
     fireEvent.press(screen.getByTestId('trigger'))
     jest.runAllTimers()
-    // Separator is rendered but not directly testable via text
     expect(screen.getByText('Item 1')).toBeTruthy()
+    expect(screen.getByTestId('sep').props.role).toBe('separator')
     expect(screen.getByText('Item 2')).toBeTruthy()
   })
 
@@ -136,8 +158,64 @@ describe('Menu', () => {
     expect(screen.getByText('Item 1')).toBeTruthy()
   })
 
-  it('renders correctly in dark mode', () => {
+  it('dismisses on back button via onRequestClose', () => {
     render(
+      <Menu.Root testID="menu-root">
+        <Menu.Trigger testID="trigger"><Text>Open Menu</Text></Menu.Trigger>
+        <Menu.Content testID="content">
+          <Menu.Item>Item 1</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+      { wrapper: wrapper() },
+    )
+    fireEvent.press(screen.getByTestId('trigger'))
+    jest.runAllTimers()
+    expect(screen.getByText('Item 1')).toBeTruthy()
+    const modal = screen.UNSAFE_getByType(Modal)
+    expect(typeof modal.props.onRequestClose).toBe('function')
+    fireEvent(modal, 'requestClose')
+    jest.runAllTimers()
+    expect(screen.queryByText('Item 1')).toBeNull()
+  })
+
+  it('dismisses on outside backdrop press', () => {
+    render(
+      <Menu.Root testID="menu-root">
+        <Menu.Trigger testID="trigger"><Text>Open Menu</Text></Menu.Trigger>
+        <Menu.Content testID="content">
+          <Menu.Item>Item 1</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+      { wrapper: wrapper() },
+    )
+    fireEvent.press(screen.getByTestId('trigger'))
+    jest.runAllTimers()
+    expect(screen.getByText('Item 1')).toBeTruthy()
+    const backdrop = screen.UNSAFE_getAllByType(Pressable).find(
+      (node) => typeof node.props.onResponderRelease === 'function',
+    )
+    expect(backdrop).toBeTruthy()
+    fireEvent(backdrop, 'responderRelease')
+    jest.runAllTimers()
+    expect(screen.queryByText('Item 1')).toBeNull()
+  })
+
+  it('sets accessibilityViewIsModal on overlay content', () => {
+    render(
+      <Menu.Root testID="menu-root">
+        <Menu.Trigger testID="trigger"><Text>Open Menu</Text></Menu.Trigger>
+        <Menu.Content testID="content">
+          <Menu.Item>Item 1</Menu.Item>
+        </Menu.Content>
+      </Menu.Root>,
+      { wrapper: wrapper() },
+    )
+    fireEvent.press(screen.getByTestId('trigger'))
+    jest.runAllTimers()
+    expect(screen.UNSAFE_getByProps({ accessibilityViewIsModal: true })).toBeTruthy()
+  })
+
+  it('renders correctly in dark mode', () => {    render(
       <Menu.Root testID="menu-root">
         <Menu.Trigger testID="trigger"><Text>Open Menu</Text></Menu.Trigger>
         <Menu.Content testID="content">
