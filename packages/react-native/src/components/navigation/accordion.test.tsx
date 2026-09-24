@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native'
+import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { Provider } from '../../primitives/Provider'
 import { Accordion } from './Accordion'
 
@@ -52,7 +52,9 @@ describe('Accordion', () => {
       { wrapper: wrapper() },
     )
     fireEvent.press(screen.getByTestId('trigger-a'))
-    jest.runAllTimers()
+    act(() => {
+      jest.runAllTimers()
+    })
     expect(screen.getByTestId('trigger-a').props.accessibilityState?.expanded).toBe(true)
     expect(screen.getByTestId('content-a')).toBeTruthy()
     expect(screen.getByTestId('trigger-b').props.accessibilityState?.expanded).toBe(false)
@@ -78,14 +80,91 @@ describe('Accordion', () => {
       { wrapper: wrapper() },
     )
     fireEvent.press(screen.getByTestId('trigger-a'))
-    jest.runAllTimers()
+    act(() => {
+      jest.runAllTimers()
+    })
     expect(screen.getByTestId('content-a')).toBeTruthy()
     fireEvent.press(screen.getByTestId('trigger-b'))
-    jest.runAllTimers()
+    expect(screen.getByTestId('content-a')).toBeTruthy()
+    act(() => {
+      jest.runAllTimers()
+    })
     expect(screen.getByTestId('trigger-a').props.accessibilityState?.expanded).toBe(false)
-    // Content is still in tree but collapsed (height 0)
+    expect(screen.queryByTestId('content-a')).toBeNull()
     expect(screen.getByTestId('trigger-b').props.accessibilityState?.expanded).toBe(true)
     expect(screen.getByTestId('content-b')).toBeTruthy()
+  })
+
+  it('keeps content mounted through the exit animation then unmounts', () => {
+    render(
+      <Accordion.Root type="single" testID="accordion-root">
+        <Accordion.Item value="a" testID="item-a">
+          <Accordion.Header>
+            <Accordion.Trigger value="a" testID="trigger-a">Question A</Accordion.Trigger>
+          </Accordion.Header>
+          <Accordion.Content value="a" testID="content-a">Answer A</Accordion.Content>
+        </Accordion.Item>
+      </Accordion.Root>,
+      { wrapper: wrapper() },
+    )
+    fireEvent.press(screen.getByTestId('trigger-a'))
+    act(() => {
+      jest.runAllTimers()
+    })
+    expect(screen.getByTestId('content-a')).toBeTruthy()
+    fireEvent.press(screen.getByTestId('trigger-a'))
+    expect(screen.getByTestId('content-a')).toBeTruthy()
+    act(() => {
+      jest.runAllTimers()
+    })
+    expect(screen.queryByTestId('content-a')).toBeNull()
+  })
+
+  it('measures content height for the reveal animation', () => {
+    render(
+      <Accordion.Root type="single" testID="accordion-root">
+        <Accordion.Item value="a" testID="item-a">
+          <Accordion.Header>
+            <Accordion.Trigger value="a" testID="trigger-a">Question A</Accordion.Trigger>
+          </Accordion.Header>
+          <Accordion.Content value="a" testID="content-a">Answer A</Accordion.Content>
+        </Accordion.Item>
+      </Accordion.Root>,
+      { wrapper: wrapper() },
+    )
+    fireEvent.press(screen.getByTestId('trigger-a'))
+    fireEvent(screen.getByTestId('content-a-inner'), 'layout', { nativeEvent: { layout: { height: 120 } } })
+    act(() => {
+      jest.runAllTimers()
+    })
+    const style = screen.getByTestId('content-a').props.style
+    const flat = Array.isArray(style) ? Object.assign({}, ...style) : style
+    expect(flat.maxHeight).toBeDefined()
+  })
+
+  it('calls onValueChange in uncontrolled mode', () => {
+    const onValueChange = jest.fn()
+    render(
+      <Accordion.Root type="single" onValueChange={onValueChange} testID="accordion-root">
+        <Accordion.Item value="a" testID="item-a">
+          <Accordion.Header>
+            <Accordion.Trigger value="a" testID="trigger-a">Question A</Accordion.Trigger>
+          </Accordion.Header>
+          <Accordion.Content value="a" testID="content-a">Answer A</Accordion.Content>
+        </Accordion.Item>
+      </Accordion.Root>,
+      { wrapper: wrapper() },
+    )
+    fireEvent.press(screen.getByTestId('trigger-a'))
+    act(() => {
+      jest.runAllTimers()
+    })
+    expect(onValueChange).toHaveBeenCalledWith(['a'])
+    fireEvent.press(screen.getByTestId('trigger-a'))
+    act(() => {
+      jest.runAllTimers()
+    })
+    expect(onValueChange).toHaveBeenCalledWith([])
   })
 
   it('supports multiple mode allowing multiple open items', () => {
@@ -108,7 +187,9 @@ describe('Accordion', () => {
     )
     fireEvent.press(screen.getByTestId('trigger-a'))
     fireEvent.press(screen.getByTestId('trigger-b'))
-    jest.runAllTimers()
+    act(() => {
+      jest.runAllTimers()
+    })
     expect(screen.getByTestId('trigger-a').props.accessibilityState?.expanded).toBe(true)
     expect(screen.getByTestId('trigger-b').props.accessibilityState?.expanded).toBe(true)
     expect(screen.getByTestId('content-a')).toBeTruthy()
@@ -135,7 +216,9 @@ describe('Accordion', () => {
       { wrapper: wrapper() },
     )
     fireEvent.press(screen.getByTestId('trigger-b'))
-    jest.runAllTimers()
+    act(() => {
+      jest.runAllTimers()
+    })
     expect(onValueChange).toHaveBeenCalledWith(['b'])
   })
 

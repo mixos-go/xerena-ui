@@ -43,8 +43,8 @@ export function AccordionRoot({
 
   const toggle = useCallback(
     (value: string) => {
-      if (isControlled) {
-        const newExpanded = new Set(controlledValue)
+      const computeNext = (prev: Set<string>) => {
+        const newExpanded = new Set(prev)
         if (newExpanded.has(value)) {
           newExpanded.delete(value)
         } else if (type === 'single') {
@@ -53,23 +53,17 @@ export function AccordionRoot({
         } else {
           newExpanded.add(value)
         }
-        onValueChange?.(Array.from(newExpanded))
+        return newExpanded
+      }
+      if (isControlled) {
+        onValueChange?.(Array.from(computeNext(new Set(controlledValue))))
       } else {
-        setInternalExpanded((prev) => {
-          const newExpanded = new Set(prev)
-          if (newExpanded.has(value)) {
-            newExpanded.delete(value)
-          } else if (type === 'single') {
-            newExpanded.clear()
-            newExpanded.add(value)
-          } else {
-            newExpanded.add(value)
-          }
-          return newExpanded
-        })
+        const next = computeNext(internalExpanded)
+        setInternalExpanded(next)
+        onValueChange?.(Array.from(next))
       }
     },
-    [isControlled, controlledValue, type, onValueChange],
+    [isControlled, controlledValue, internalExpanded, type, onValueChange],
   )
 
   return (
@@ -196,28 +190,38 @@ export function AccordionContent({ value, children, style, testID = `content-${v
   const { animate, reduced } = useNativeMotion()
   const colors = useNativeColors()
   const isOpen = expanded.has(value)
+  const [closing, setClosing] = useState(false)
+  const visible = isOpen || closing
 
-  const heightAnim = useRef(new Animated.Value(0)).current
+  const heightAnim = useRef(new Animated.Value(isOpen ? 1 : 0)).current
+  const [contentHeight, setContentHeight] = useState(0)
   const wasOpen = useRef(isOpen)
 
   useEffect(() => {
     if (isOpen && !wasOpen.current) {
+      setClosing(false)
       if (reduced) {
         heightAnim.setValue(1)
       } else {
         Animated.timing(heightAnim, animate({ toValue: 1, duration: 'moderate', easing: 'standard' })).start()
       }
     } else if (!isOpen && wasOpen.current) {
+      setClosing(true)
       if (reduced) {
         heightAnim.setValue(0)
+        setClosing(false)
       } else {
-        Animated.timing(heightAnim, animate({ toValue: 0, duration: 'emphatic', easing: 'exit' })).start()
+        Animated.timing(heightAnim, animate({ toValue: 0, duration: 'emphatic', easing: 'exit' })).start(
+          ({ finished }) => {
+            if (finished) setClosing(false)
+          },
+        )
       }
     }
     wasOpen.current = isOpen
   }, [isOpen, animate, reduced, heightAnim])
 
-  if (!isOpen) return null
+  if (!visible) return null
 
   return (
     <Animated.View
@@ -226,18 +230,24 @@ export function AccordionContent({ value, children, style, testID = `content-${v
         styles.content,
         {
           overflow: 'hidden',
-          maxHeight: heightAnim.interpolate({
-            inputRange: [0, 1],
-            outputRange: [0, 500],
-            extrapolate: 'clamp',
-          }),
+          maxHeight: contentHeight
+            ? heightAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, contentHeight],
+              extrapolate: 'clamp',
+            })
+            : undefined,
         },
         style,
       ]}
       role="region"
       nativeID={`acc-content-${value}`}
     >
-      <View style={styles.contentInner}>
+      <View
+        testID={`${testID}-inner`}
+        onLayout={(e) => setContentHeight(e.nativeEvent.layout.height)}
+        style={styles.contentInner}
+      >
         <Text style={[body.md, { color: colors.text }]}>{children}</Text>
       </View>
     </Animated.View>
