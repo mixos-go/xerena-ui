@@ -1,4 +1,4 @@
-import { useCallback, type ReactNode } from 'react'
+import { useCallback } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { Pressable } from '../../../primitives/Pressable'
 import { useNativeColors } from '../../../hooks/useNativeColors'
@@ -13,7 +13,6 @@ export interface PaginationProps {
   onChange: (page: number) => void
   siblingCount?: number
   variant?: 'page' | 'simple'
-  renderPagePreview?: (page: number) => ReactNode
   testID?: string
 }
 

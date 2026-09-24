@@ -77,7 +77,7 @@ export function EditableCell({
 
   if (editing) {
     return (
-      <View testID={testID} style={contentStyle} accessibilityRole="search">
+      <View testID={testID} style={contentStyle} accessibilityLabel="Edit cell value">
         <TextInput
           ref={inputRef}
           value={editValue}
