@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react-native'
+import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { Provider } from '../../primitives/Provider'
 import { Combobox } from './Combobox'
 
@@ -70,7 +70,7 @@ describe('Combobox', () => {
     const onChange = jest.fn()
     render(<Combobox testID="combobox" options={options} disabled onChange={onChange} />, { wrapper: wrapper() })
     const input = screen.getByRole('combobox')
-    expect(input.props.disabled).toBe(true)
+    expect(input.props.editable).toBe(false)
     expect(input.props.accessibilityState).toMatchObject({ disabled: true })
   })
 
@@ -95,8 +95,4 @@ describe('Combobox', () => {
     render(<Combobox testID="combobox" options={options} error />, { wrapper: wrapper({ mode: 'light', semantic: { danger: override } }) })
     expect(screen.getByRole('combobox')).toBeTruthy()
   })
-
-  function act(cb: () => void) {
-    cb()
-  }
 })

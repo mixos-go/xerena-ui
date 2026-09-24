@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ComponentProps } from 'react'
 import { TextInput, Text, View, type ViewStyle, type TextStyle } from 'react-native'
 import { Pressable } from '../../primitives/Pressable'
 import { Anchor } from '../../primitives/Anchor'
@@ -58,6 +58,20 @@ export function Combobox({
   const [open, setOpen] = useState(false)
   const [highlightedIndex, setHighlightedIndex] = useState(-1)
   const inputRef = useRef<TextInput>(null)
+  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearBlurTimer = useCallback(() => {
+    if (blurTimer.current !== null) {
+      clearTimeout(blurTimer.current)
+      blurTimer.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (blurTimer.current !== null) clearTimeout(blurTimer.current)
+    }
+  }, [])
 
   const filteredOptions = useMemo(
     () => options.filter((opt) => filterOption(opt, query)),
@@ -82,6 +96,7 @@ export function Combobox({
 
   const handleInputChange = useCallback(
     (text: string) => {
+      clearBlurTimer()
       setQuery(text)
       onSearch?.(text)
       if (!open) {
@@ -89,23 +104,25 @@ export function Combobox({
         setHighlightedIndex(0)
       }
     },
-    [],
+    [open, onSearch, clearBlurTimer],
   )
 
   const handleInputFocus = useCallback(() => {
     if (!isDisabled) {
+      clearBlurTimer()
       setOpen(true)
       setHighlightedIndex(0)
     }
-  }, [isDisabled])
+  }, [isDisabled, clearBlurTimer])
 
   const handleInputBlur = useCallback(() => {
-    // Delay close to allow option selection
-    setTimeout(() => {
+    clearBlurTimer()
+    blurTimer.current = setTimeout(() => {
+      blurTimer.current = null
       setOpen(false)
       setHighlightedIndex(-1)
     }, 150)
-  }, [])
+  }, [clearBlurTimer])
 
   const handleKeyDown = useCallback(
     (event: { nativeEvent: { key: string; preventDefault?: () => void } }) => {
@@ -168,14 +185,12 @@ export function Combobox({
     [filteredOptions],
   )
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const textInputProps: any = {
+  const textInputProps: ComponentProps<typeof TextInput> = {
     value: query || selectedOption?.label || '',
     onChangeText: handleInputChange,
     onFocus: handleInputFocus,
     onBlur: handleInputBlur,
     onKeyPress: handleKeyDown,
-    disabled: isDisabled,
     editable: !isDisabled,
     placeholder: query ? '' : placeholder,
     placeholderTextColor: colors.textMuted,
@@ -190,7 +205,6 @@ export function Combobox({
     accessibilityLabel: placeholder,
     autoComplete: 'off',
     autoCorrect: false,
-    spellCheck: false,
   }
 
   return (
