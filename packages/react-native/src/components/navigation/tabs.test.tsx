@@ -105,6 +105,22 @@ describe('Tabs', () => {
     expect(screen.getByTestId('tabs-list')).toBeTruthy()
   })
 
+  it('renders the tab list inside a horizontal ScrollView', () => {
+    render(
+      <Tabs.Root defaultValue="a" testID="tabs-root">
+        <Tabs.List testID="tabs-list">
+          <Tabs.Trigger value="a" testID="tab-a">Tab A</Tabs.Trigger>
+          <Tabs.Trigger value="b" testID="tab-b">Tab B</Tabs.Trigger>
+        </Tabs.List>
+        <Tabs.Panel value="a" testID="panel-a">Content A</Tabs.Panel>
+      </Tabs.Root>,
+      { wrapper: wrapper() },
+    )
+    const scroll = screen.getByTestId('tabs-list-scroll')
+    expect(scroll.props.horizontal).toBe(true)
+    expect(screen.getByTestId('tabs-list')).toBeTruthy()
+  })
+
   it('renders correctly in dark mode', () => {
     render(
       <Tabs.Root defaultValue="a" testID="tabs-root">

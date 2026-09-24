@@ -1,10 +1,12 @@
-import { createContext, useContext, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useState, type ReactNode, Children, isValidElement, cloneElement } from 'react'
 import { View, type ViewStyle } from 'react-native'
 import { useNativeColors } from '../../hooks/useNativeColors'
 import { radius } from '../../styles/radius'
 
 export interface InputGroupContextValue {
   hasError: boolean
+  focused: boolean
+  setFocused: (focused: boolean) => void
 }
 
 const InputGroupContext = createContext<InputGroupContextValue | null>(null)
@@ -12,6 +14,8 @@ const InputGroupContext = createContext<InputGroupContextValue | null>(null)
 export function useInputGroupContext(): InputGroupContextValue | null {
   return useContext(InputGroupContext)
 }
+
+type FocusHandler = (e: unknown) => void
 
 export interface InputGroupProps {
   children: ReactNode
@@ -21,23 +25,46 @@ export interface InputGroupProps {
 
 export function InputGroup({ children, testID, error = false }: InputGroupProps) {
   const colors = useNativeColors()
+  const [focused, setFocused] = useState(false)
 
   const containerStyle: ViewStyle = {
     flexDirection: 'row',
     borderRadius: radius.md,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: error ? colors.danger : colors.border,
+    borderColor: error ? colors.danger : focused ? colors.primary : colors.border,
     backgroundColor: 'transparent',
   }
 
+  const chainFocus = useCallback(
+    (childHandler: FocusHandler | undefined, next: boolean): FocusHandler => (e: unknown) => {
+      setFocused(next)
+      childHandler?.(e)
+    },
+    [],
+  )
+
   const contextValue: InputGroupContextValue = {
     hasError: error,
+    focused,
+    setFocused,
   }
 
   return (
     <InputGroupContext.Provider value={contextValue}>
-      <View testID={testID} style={containerStyle}>{children}</View>
+      <View testID={testID} style={containerStyle}>
+        {Children.map(children, (child) => {
+          if (!isValidElement(child)) return child
+          const props = child.props as { onFocus?: FocusHandler; onBlur?: FocusHandler }
+          return cloneElement(
+            child as React.ReactElement<{ onFocus?: FocusHandler; onBlur?: FocusHandler }>,
+            {
+              onFocus: chainFocus(props.onFocus, true),
+              onBlur: chainFocus(props.onBlur, false),
+            },
+          )
+        })}
+      </View>
     </InputGroupContext.Provider>
   )
 }

@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react-native'
+import { fireEvent, render, screen } from '@testing-library/react-native'
 import { semantic, semanticDark } from '@xerena/tokens'
+import { View } from 'react-native'
 import { Provider } from '../../primitives/Provider'
 import { InputGroup, InputGroupAddon } from './InputGroup'
 import { Input } from './Input'
@@ -32,6 +33,20 @@ describe('InputGroup', () => {
       { wrapper: wrapper() },
     )
     expect(screen.getByTestId('inputgroup')).toHaveStyle({ borderColor: semantic.color.danger })
+  })
+
+  it('highlights the border color on child focus and restores on blur', () => {
+    render(
+      <InputGroup testID="inputgroup">
+        <Input testID="input" placeholder="Amount" />
+      </InputGroup>,
+      { wrapper: wrapper() },
+    )
+    expect(screen.getByTestId('inputgroup')).toHaveStyle({ borderColor: semantic.color.border })
+    fireEvent(screen.getByTestId('input-input'), 'focus')
+    expect(screen.getByTestId('inputgroup')).toHaveStyle({ borderColor: semantic.color.primary })
+    fireEvent(screen.getByTestId('input-input'), 'blur')
+    expect(screen.getByTestId('inputgroup')).toHaveStyle({ borderColor: semantic.color.border })
   })
 
   it('renders addon on left', () => {
@@ -95,5 +110,3 @@ describe('InputGroup', () => {
     expect(screen.getByTestId('inputgroup')).toHaveStyle({ borderColor: override })
   })
 })
-
-import { View } from 'react-native'

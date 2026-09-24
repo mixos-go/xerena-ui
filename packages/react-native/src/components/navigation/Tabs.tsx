@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback, useRef, type ReactNode, Children, isValidElement, cloneElement } from 'react'
-import { Animated, StyleSheet, Text, View, type ViewStyle, type TextStyle } from 'react-native'
+import { Animated, ScrollView, StyleSheet, Text, View, type ViewStyle, type TextStyle } from 'react-native'
 import { Pressable } from '../../primitives/Pressable'
 import { useNativeColors } from '../../hooks/useNativeColors'
 import { useNativeMotion } from '../../hooks/useNativeMotion'
@@ -114,33 +114,39 @@ export function TabsList({ children, style, testID = 'tabs-list' }: TabsListProp
   }
 
   return (
-    <View testID={testID} style={listStyle} accessibilityRole="tablist">
-      {Children.map(children, (child, index) => {
-        if (!isValidElement(child)) return child
-        if ((child.type as { displayName?: string }).displayName !== 'TabsTrigger') return child
-        const props = child.props as { value: string; disabled?: boolean }
-        const isSelected = props.value === value
-        return cloneElement(child as React.ReactElement<TabsTriggerProps>, {
-          isSelected,
-          measureTab: (layout: { x: number; width: number }) => measureTab(index, layout),
-          ref: (el: React.ComponentRef<typeof Pressable>) => {
-            tabRefs.current[index] = el
-          },
-        })
-      })}
-      {variant === 'underline' && (
-        <Animated.View
-          style={[
-            styles.indicator,
-            {
-              transform: [{ translateX: indicatorRef }],
-              width: indicatorWidthRef,
-              backgroundColor: colors.primary,
+    <ScrollView
+      testID={`${testID}-scroll`}
+      horizontal
+      showsHorizontalScrollIndicator={false}
+    >
+      <View testID={testID} style={listStyle} accessibilityRole="tablist">
+        {Children.map(children, (child, index) => {
+          if (!isValidElement(child)) return child
+          if ((child.type as { displayName?: string }).displayName !== 'TabsTrigger') return child
+          const props = child.props as { value: string; disabled?: boolean }
+          const isSelected = props.value === value
+          return cloneElement(child as React.ReactElement<TabsTriggerProps>, {
+            isSelected,
+            measureTab: (layout: { x: number; width: number }) => measureTab(index, layout),
+            ref: (el: React.ComponentRef<typeof Pressable>) => {
+              tabRefs.current[index] = el
             },
-          ]}
-        />
-      )}
-    </View>
+          })
+        })}
+        {variant === 'underline' && (
+          <Animated.View
+            style={[
+              styles.indicator,
+              {
+                transform: [{ translateX: indicatorRef }],
+                width: indicatorWidthRef,
+                backgroundColor: colors.primary,
+              },
+            ]}
+          />
+        )}
+      </View>
+    </ScrollView>
   )
 }
 
