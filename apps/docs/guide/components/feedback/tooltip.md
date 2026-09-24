@@ -2,6 +2,10 @@
 
 Delay-triggered hover and focus label anchored to its child.
 
+::: tip React Native
+Natively an anchored `Modal` shown on press-in/hover/focus. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

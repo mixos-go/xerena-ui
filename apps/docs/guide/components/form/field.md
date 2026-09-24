@@ -2,6 +2,10 @@
 
 Label, control, hint, and error wrapper for form inputs.
 
+::: tip React Native
+Natively `asChild` has no equivalent; error/disabled flow via context. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

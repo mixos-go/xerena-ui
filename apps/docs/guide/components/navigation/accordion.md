@@ -2,6 +2,10 @@
 
 Expandable sections composed from Root + Item + Header + Trigger + Content.
 
+::: tip React Native
+Natively a height reveal via `Animated`; touch-first, no roving tabindex. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

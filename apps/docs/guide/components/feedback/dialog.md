@@ -2,6 +2,10 @@
 
 Modal dialog composed from Root + Portal + Content + Close + Title + Description.
 
+::: tip React Native
+Natively an `Overlay` (`Modal`) + elevated card; no portal or DOM focus trap. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

@@ -2,6 +2,10 @@
 
 Surface container with elevation, border, padding, and an interactive option.
 
+::: tip React Native
+Natively `asChild` has no equivalent; elevation uses the `nativeElevation` parser. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

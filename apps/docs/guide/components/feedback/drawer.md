@@ -2,6 +2,10 @@
 
 Side- or edge-mounted panel composed from Root + Trigger + Content.
 
+::: tip React Native
+Natively an `Overlay` (`Modal`) + slide animation per `side`. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

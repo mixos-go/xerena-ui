@@ -2,6 +2,10 @@
 
 Floating panel anchored to a trigger, composed from Root + Trigger + Content.
 
+::: tip React Native
+Natively an anchored `Overlay` positioned from trigger geometry. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

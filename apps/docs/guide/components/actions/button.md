@@ -2,6 +2,10 @@
 
 Primary interactive action control.
 
+::: tip React Native
+Natively `asChild` has no equivalent — `Button` renders the pressable directly. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx
