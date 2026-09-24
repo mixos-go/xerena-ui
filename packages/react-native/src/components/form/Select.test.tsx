@@ -1,4 +1,3 @@
-import { Text, View } from 'react-native'
 import { act, fireEvent, render, screen } from '@testing-library/react-native'
 import { semantic, semanticDark } from '@xerena/tokens'
 import { Provider } from '../../primitives/Provider'

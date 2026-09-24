@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Text, View, type ViewStyle, type TextStyle } from 'react-native'
 import { Pressable } from '../../primitives/Pressable'
 import { Anchor } from '../../primitives/Anchor'
@@ -27,12 +27,6 @@ export interface SelectProps {
   multiple?: boolean
 }
 
-function isSelected<T>(selected: T | T[] | undefined, value: T): boolean {
-  if (selected === undefined) return false
-  if (Array.isArray(selected)) return selected.includes(value)
-  return selected === value
-}
-
 export function Select({
   options,
   placeholder = 'Select...',
@@ -42,8 +36,9 @@ export function Select({
   disabled,
   error: propError,
   testID,
-  multiple = false,
+  multiple: _multiple = false,
 }: SelectProps) {
+  void _multiple
   const colors = useNativeColors()
   const fieldContext = useFieldContext()
   const isDisabled = disabled ?? fieldContext?.disabled ?? false
@@ -111,7 +106,7 @@ export function Select({
 
   return (
     <Anchor>
-      {({ x, y, width, height, open: anchorOpen, setOpen: setAnchorOpen, triggerRef }) => (
+      {({ x, y, width, height, setOpen: setAnchorOpen, triggerRef }) => (
         <>
           <Pressable
             ref={triggerRef}

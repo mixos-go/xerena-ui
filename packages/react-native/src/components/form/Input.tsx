@@ -90,6 +90,7 @@ export const Input = forwardRef<View, InputProps>(
 
     return (
       <Pressable
+        ref={ref}
         testID={testID ? `${testID}-container` : undefined}
         onPress={focusInput}
         disabled={isDisabled}

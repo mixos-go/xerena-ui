@@ -2,7 +2,6 @@ import { forwardRef } from 'react'
 import { View, type ViewStyle } from 'react-native'
 import { Pressable } from '../../primitives/Pressable'
 import { useNativeColors } from '../../hooks/useNativeColors'
-import { spacing } from '../../styles/spacing'
 import { radius } from '../../styles/radius'
 import type { PressableStateCallbackType } from 'react-native'
 

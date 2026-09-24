@@ -31,7 +31,7 @@ export const Textarea = forwardRef<View, TextareaProps>(
       onChangeText,
       disabled,
       error: propError,
-      resize = 'none',
+      resize: _resize = 'none',
       minHeight = 100,
       testID,
       style,
@@ -39,6 +39,7 @@ export const Textarea = forwardRef<View, TextareaProps>(
     },
     ref,
   ) {
+    void _resize
     const colors = useNativeColors()
     const fieldContext = useFieldContext()
     const isDisabled = disabled ?? fieldContext?.disabled ?? false
@@ -74,7 +75,7 @@ export const Textarea = forwardRef<View, TextareaProps>(
     const textInputProps = rest as any
 
     return (
-      <View testID={testID} style={[{ opacity: isDisabled ? 0.5 : 1 }, containerStyle, style]}>
+      <View ref={ref} testID={testID} style={[{ opacity: isDisabled ? 0.5 : 1 }, containerStyle, style]}>
         <TextInput
           ref={inputRef}
           testID={testID ? `${testID}-input` : undefined}

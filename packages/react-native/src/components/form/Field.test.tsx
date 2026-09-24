@@ -1,5 +1,5 @@
 import { Text, View } from 'react-native'
-import { fireEvent, render, screen } from '@testing-library/react-native'
+import { render, screen } from '@testing-library/react-native'
 import { semantic, semanticDark } from '@xerena/tokens'
 import { Provider } from '../../primitives/Provider'
 import { Field } from './Field'

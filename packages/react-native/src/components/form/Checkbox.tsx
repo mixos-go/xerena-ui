@@ -3,7 +3,6 @@ import { Text, View, type ViewStyle, type TextStyle } from 'react-native'
 import { Pressable } from '../../primitives/Pressable'
 import { useNativeColors } from '../../hooks/useNativeColors'
 import { useControllableState } from '../../hooks/useControllableState'
-import { spacing } from '../../styles/spacing'
 import { radius } from '../../styles/radius'
 import type { PressableStateCallbackType } from 'react-native'
 

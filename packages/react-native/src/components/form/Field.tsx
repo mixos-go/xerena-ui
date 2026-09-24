@@ -3,7 +3,6 @@ import { Text, View, type ViewStyle } from 'react-native'
 import { useNativeColors } from '../../hooks/useNativeColors'
 import { spacing } from '../../styles/spacing'
 import { body } from '../../styles/typography'
-import { radius } from '../../styles/radius'
 
 export interface FieldContextValue {
   error?: boolean
@@ -38,7 +37,6 @@ export function Field({
   children,
   testID,
 }: FieldProps) {
-  const id = htmlFor ?? (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined)
   const colors = useNativeColors()
 
   const contextValue: FieldContextValue = {
@@ -53,7 +51,7 @@ export function Field({
 
   return (
     <FieldContext.Provider value={contextValue}>
-      <View testID={testID} style={containerStyle}>
+      <View testID={testID} nativeID={htmlFor} style={containerStyle}>
         {label && (
           <Text
             style={[
