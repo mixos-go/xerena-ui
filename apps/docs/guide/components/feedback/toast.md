@@ -2,6 +2,10 @@
 
 Imperative toast notification with an imperative `toast()` trigger and an auto-dismiss `Toast`.
 
+::: tip React Native
+Natively a modal stack + auto-dismiss timer; `position` is accepted but unused. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

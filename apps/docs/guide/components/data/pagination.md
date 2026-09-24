@@ -2,6 +2,10 @@
 
 Page navigation with a numbered range or a simple next-only variant.
 
+::: tip React Native
+`renderPagePreview` is removed natively (hover has no touch equivalent). See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

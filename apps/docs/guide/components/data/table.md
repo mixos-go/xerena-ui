@@ -2,6 +2,10 @@
 
 Data table built from Root + subcomponents, with variants, frozen headers, selection, and expandable rows.
 
+::: tip React Native
+Natively a View-based grid (no real table); `frozenHeader` uses `stickyHeaderIndices`. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

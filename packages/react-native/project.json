@@ -10,11 +10,13 @@
     },
     "test": {
       "executor": "nx:run-commands",
-      "options": { "command": "jest", "cwd": "packages/react-native" }
+      "options": { "command": "jest", "cwd": "packages/react-native" },
+      "dependsOn": ["^build"]
     },
     "typecheck": {
       "executor": "nx:run-commands",
-      "options": { "command": "tsc -p tsconfig.json --noEmit", "cwd": "packages/react-native" }
+      "options": { "command": "tsc -p tsconfig.json --noEmit", "cwd": "packages/react-native" },
+      "dependsOn": ["^build"]
     },
     "lint": {
       "executor": "nx:run-commands",

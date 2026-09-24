@@ -2,6 +2,10 @@
 
 Inline text link for navigation.
 
+::: tip React Native
+Natively `asChild` has no equivalent and `href` is inert (no router). See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

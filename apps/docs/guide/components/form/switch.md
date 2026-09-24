@@ -2,6 +2,10 @@
 
 Persistent on/off control with a sliding thumb.
 
+::: tip React Native
+Natively a custom `Pressable` thumb + track with `accessibilityRole="switch"`. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

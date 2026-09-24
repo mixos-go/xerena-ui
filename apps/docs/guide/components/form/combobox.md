@@ -2,6 +2,10 @@
 
 Filterable listbox with a text input, built from Root + subcomponents.
 
+::: tip React Native
+Natively a `TextInput` + modal filter list via `ListOverlay`. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

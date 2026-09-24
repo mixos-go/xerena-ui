@@ -2,6 +2,10 @@
 
 Range input with a filled track and value readouts.
 
+::: tip React Native
+Natively a `PanResponder` touch drag; no hover or keyboard stepping. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

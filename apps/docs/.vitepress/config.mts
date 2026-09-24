@@ -28,6 +28,7 @@ export default defineConfig({
           { text: 'Theming', link: '/guide/theming' },
           { text: 'Motion', link: '/guide/motion' },
           { text: 'Styling', link: '/guide/styling' },
+          { text: 'Native (React Native)', link: '/guide/native' },
         ],
       },
       {

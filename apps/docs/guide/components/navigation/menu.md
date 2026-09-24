@@ -2,6 +2,10 @@
 
 Dropdown menu composed from Root + Trigger + Content + Item + Separator + Label.
 
+::: tip React Native
+Natively an anchored modal list via `ListOverlay`. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

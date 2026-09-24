@@ -2,6 +2,10 @@
 
 Tab navigation composed from Root + List + Trigger + Panel.
 
+::: tip React Native
+Natively a `ScrollView` row + `Animated` indicator; touch-first. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

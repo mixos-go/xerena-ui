@@ -2,6 +2,10 @@
 
 Native dropdown selector with the shared field styling.
 
+::: tip React Native
+No native `<select>` — natively a dismissible modal option list via `ListOverlay`. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

@@ -2,6 +2,10 @@
 
 Square button that contains an icon instead of a text label.
 
+::: tip React Native
+Natively `asChild` has no equivalent — `IconButton` renders the pressable directly. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx

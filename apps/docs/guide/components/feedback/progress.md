@@ -2,6 +2,10 @@
 
 Multi-modal progress indicator: bar, page rails, cursor ring, or circle.
 
+::: tip React Native
+The `mouse` variant is web-only; native variants are `bar`, `pageTop`, `pageBottom`, `circle`. See [React Native](/guide/native).
+:::
+
 ## Import
 
 ```tsx
