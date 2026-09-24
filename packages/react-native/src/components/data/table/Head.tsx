@@ -11,7 +11,7 @@ export interface HeadProps {
 }
 
 export function Head({ children, style, testID = 'head' }: HeadProps) {
-  const { variant, size, frozenHeader, colors, headStyle, cellBorderStyle } = useTableCtx()
+  const { variant, size, colors, headStyle, cellBorderStyle } = useTableCtx()
   const { cellPadding, fontSize } = SIZE_STYLES[size]
 
   const headCellStyle: ViewStyle = {
@@ -20,18 +20,11 @@ export function Head({ children, style, testID = 'head' }: HeadProps) {
     ...body[fontSize],
   }
 
-  const contentStyle: ViewStyle = frozenHeader
-    ? {
-        ...headStyle,
-        // position: 'sticky' not supported in RN; header freezing handled via scroll container
-      }
-    : headStyle
-
   return (
     <View
       testID={testID}
       accessibilityRole="header"
-      style={[styles.row, contentStyle, style]}
+      style={[styles.row, headStyle, style]}
     >
       {Children.map(children, (child) => {
         if (!isValidElement(child)) return child

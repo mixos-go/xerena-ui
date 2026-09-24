@@ -17,19 +17,29 @@ export function Row({ expandable = false, expandContent, children, style, testID
   const { variant, size, colors, cellBorderStyle, stripedStyle, animate, reduced } = useTableCtx()
   const { cellPadding, fontSize } = SIZE_STYLES[size]
   const [expanded, setExpanded] = useState(false)
+  const [closing, setClosing] = useState(false)
+  const visible = expanded || closing
   const expandAnimation = useRef(new Animated.Value(0)).current
+  const [contentHeight, setContentHeight] = useState(0)
   const wasExpanded = useRef(expanded)
 
   const toggle = useCallback(() => setExpanded((p) => !p), [])
 
   useEffect(() => {
     if (expanded && !wasExpanded.current) {
+      setClosing(false)
       Animated.timing(expandAnimation, animate({ toValue: 1, duration: 'fast', easing: 'standard' })).start()
     } else if (!expanded && wasExpanded.current) {
+      setClosing(true)
       if (reduced) {
         expandAnimation.setValue(0)
+        setClosing(false)
       } else {
-        Animated.timing(expandAnimation, animate({ toValue: 0, duration: 'emphatic', easing: 'exit' })).start()
+        Animated.timing(expandAnimation, animate({ toValue: 0, duration: 'emphatic', easing: 'exit' })).start(
+          ({ finished }) => {
+            if (finished) setClosing(false)
+          },
+        )
       }
     }
     wasExpanded.current = expanded
@@ -96,21 +106,26 @@ export function Row({ expandable = false, expandContent, children, style, testID
           )
         })}
       </Pressable>
-      {expandable && expandContent && (
+      {expandable && expandContent && visible && (
         <Animated.View
+          testID={`${testID}-expanded`}
           style={[
             styles.expandedContent,
             {
-              height: expandAnimation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [0, 1],
-                extrapolate: 'clamp',
-              }),
+              height: contentHeight
+                ? expandAnimation.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [0, contentHeight],
+                  extrapolate: 'clamp',
+                })
+                : 0,
               overflow: 'hidden',
             },
           ]}
         >
           <View
+            testID={`${testID}-expanded-inner`}
+            onLayout={(e) => setContentHeight(e.nativeEvent.layout.height)}
             style={{
               flexDirection: 'row',
               padding: spacing[3],

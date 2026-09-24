@@ -1,6 +1,9 @@
 import { AccessibilityInfo, Text } from 'react-native'
-import { fireEvent, render, screen } from '@testing-library/react-native'
+import { act, fireEvent, render, screen } from '@testing-library/react-native'
+import { semantic } from '@xerena/tokens'
 import { Provider } from '../../../primitives/Provider'
+import { Pressable } from '../../../primitives/Pressable'
+import { spacing } from '../../../styles/spacing'
 import { Table, Head, Body, Row, Cell, TableCheckbox, RowActions } from './index'
 
 function wrapper(theme: { mode: 'light' | 'dark'; semantic?: Record<string, string> } = { mode: 'light' }) {
@@ -40,10 +43,10 @@ describe('Table', () => {
     expect(table.props.role).toBe('grid')
   })
 
-  it('applies variant styles', () => {
+  it('applies outlined variant border styles from tokens', () => {
     render(
-      <Table testID="table-root" variant="striped">
-        <Head>
+      <Table testID="table-root" variant="outlined">
+        <Head testID="head">
           <Row>
             <Cell as="th">Name</Cell>
           </Row>
@@ -56,27 +59,62 @@ describe('Table', () => {
       </Table>,
       { wrapper: wrapper() },
     )
-    expect(screen.getByTestId('table-root')).toBeTruthy()
+    expect(screen.getByTestId('head')).toHaveStyle({
+      borderBottomWidth: 1,
+      borderBottomColor: semantic.color.border,
+    })
   })
 
-  it.each(['sm', 'md', 'lg'] as const)('applies %s size', (size) => {
+  it('applies grid variant cell borders from tokens', () => {
+    render(
+      <Table testID="table-root" variant="grid">
+        <Body>
+          <Row>
+            <Cell testID="cell">Cell 1</Cell>
+          </Row>
+        </Body>
+      </Table>,
+      { wrapper: wrapper() },
+    )
+    expect(screen.getByTestId('cell')).toHaveStyle({
+      borderWidth: 1,
+      borderColor: semantic.color.border,
+    })
+  })
+
+  it('applies striped variant surface background from tokens', () => {
+    render(
+      <Table testID="table-root" variant="striped">
+        <Body>
+          <Row testID="row" expandable expandContent={<Text>More</Text>}>
+            <Cell>Cell 1</Cell>
+          </Row>
+        </Body>
+      </Table>,
+      { wrapper: wrapper() },
+    )
+    expect(screen.getByTestId('row')).toHaveStyle({ backgroundColor: semantic.color.surface })
+  })
+
+  it.each(['sm', 'md', 'lg'] as const)('applies %s cell padding from tokens', (size) => {
+    const padding = { sm: spacing[1], md: spacing[2], lg: spacing[3] }[size]
     render(
       <Table testID="table-root" size={size}>
         <Body>
           <Row>
-            <Cell>Cell</Cell>
+            <Cell testID="cell">Cell</Cell>
           </Row>
         </Body>
       </Table>,
       { wrapper: wrapper() },
     )
-    expect(screen.getByTestId('table-root')).toBeTruthy()
+    expect(screen.getByTestId('cell')).toHaveStyle({ padding })
   })
 
-  it('renders frozenHeader container', () => {
+  it('renders frozenHeader inside a sticky ScrollView bounded by maxHeight', () => {
     render(
       <Table testID="table-root" frozenHeader maxHeight={200}>
-        <Head>
+        <Head testID="head">
           <Row>
             <Cell as="th">Name</Cell>
           </Row>
@@ -89,7 +127,10 @@ describe('Table', () => {
       </Table>,
       { wrapper: wrapper() },
     )
-    expect(screen.getByTestId('table-root')).toBeTruthy()
+    const scroll = screen.getByTestId('table-root-scroll')
+    expect(scroll.props.stickyHeaderIndices).toEqual([0])
+    expect(scroll).toHaveStyle({ maxHeight: 200 })
+    expect(screen.getByTestId('head')).toBeTruthy()
   })
 
   it('renders caption when provided', () => {
@@ -157,8 +198,21 @@ describe('Row', () => {
     )
     const row = screen.getByTestId('row')
     expect(row.props.accessibilityState?.expanded).toBe(false)
+    expect(screen.queryByText('Expanded content')).toBeNull()
     fireEvent.press(row)
-    // Note: expanded state is internal, we test via the expand trigger
+    act(() => {
+      jest.runAllTimers()
+    })
+    expect(screen.getByTestId('row').props.accessibilityState?.expanded).toBe(true)
+    fireEvent(screen.getByTestId('row-expanded-inner'), 'layout', { nativeEvent: { layout: { height: 80 } } })
+    expect(screen.getByText('Expanded content')).toBeTruthy()
+    expect(screen.getByTestId('row-expanded')).toBeTruthy()
+    fireEvent.press(screen.getByTestId('row'))
+    expect(screen.getByText('Expanded content')).toBeTruthy()
+    act(() => {
+      jest.runAllTimers()
+    })
+    expect(screen.queryByText('Expanded content')).toBeNull()
   })
 })
 
@@ -249,6 +303,28 @@ describe('RowActions', () => {
       { wrapper: wrapper() },
     )
     expect(screen.getByTestId('actions')).toBeTruthy()
+    expect(screen.getByText('Action')).toBeTruthy()
+  })
+
+  it('triggers action handlers on press', () => {
+    const onPress = jest.fn()
+    render(
+      <Table>
+        <Body>
+          <Row>
+            <Cell>Cell</Cell>
+            <RowActions testID="actions">
+              <Pressable testID="action-btn" onPress={onPress}>
+                <Text>Go</Text>
+              </Pressable>
+            </RowActions>
+          </Row>
+        </Body>
+      </Table>,
+      { wrapper: wrapper() },
+    )
+    fireEvent.press(screen.getByTestId('action-btn'))
+    expect(onPress).toHaveBeenCalledTimes(1)
   })
 
   it('supports actionsPosition left/right', () => {

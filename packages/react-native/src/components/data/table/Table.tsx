@@ -1,5 +1,5 @@
 import { createContext, useContext, type ReactNode, Children, isValidElement, cloneElement } from 'react'
-import { StyleSheet, Text, View, type ViewStyle, Easing } from 'react-native'
+import { StyleSheet, Text, View, ScrollView, type ViewStyle, Easing } from 'react-native'
 import { useNativeColors } from '../../../hooks/useNativeColors'
 import { useNativeMotion } from '../../../hooks/useNativeMotion'
 import { spacing } from '../../../styles/spacing'
@@ -106,6 +106,31 @@ export function Table({
     cellStyle,
     cellBorderStyle,
     stripedStyle,
+  }
+
+  const scrollStyle: ViewStyle = {
+    maxHeight: typeof maxHeight === 'number' ? maxHeight : undefined,
+  }
+
+  if (frozenHeader) {
+    return (
+      <TableContext.Provider value={contextValue}>
+        <View
+          testID={testID}
+          role="grid"
+          accessibilityLabel="Data table"
+          style={styles.container}
+        >
+          <ScrollView
+            testID={`${testID}-scroll`}
+            stickyHeaderIndices={[0]}
+            style={scrollStyle}
+          >
+            {children}
+          </ScrollView>
+        </View>
+      </TableContext.Provider>
+    )
   }
 
   return (
