@@ -20,7 +20,7 @@
 - `noUncheckedIndexedAccess` is on: every indexed access handles `T | undefined`.
 - English only for code, docs, commits, and ledger. No emojis.
 - Commit identity: `git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit`. One logical change per commit, conventional messages.
-- `dist/`, `lib/`, `node_modules/`, `.superpowers/` are gitignored — never commit them.
+- `dist/`, `lib/`, `node_modules/` are gitignored — never commit them. (The SDD ledger under `.superpowers/` is tracked and committed deliberately; it is not ignored.)
 - Do NOT run `pnpm release` / `changeset publish` — publishing waits for explicit user consent.
 - Do NOT dispatch the docs deploy workflow — it is manual-only and stays undispatched.
 - Each task ends with its own review gate; record results in `.superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md`.
@@ -67,10 +67,10 @@ apps/docs/
   app/api/search/route.ts         staticGET search index
   lib/source.ts           loader
   mdx-components.tsx      global MDX components (Preview, Callout, Card)
-  content/docs/**/meta.json       file-based navigation
-  content/docs/guide/*.mdx        ported guides
-  content/docs/components/*/*.mdx 3 pilot pages
-  content-legacy/         archived VitePress .md tree (port source for the later phase)
+  content/docs/**/meta.json       file-based navigation (Task 4 shell; Task 5 adds entries)
+  content/docs/guide/*.mdx        ported guides (Task 5)
+  content/docs/components/*/*.mdx 3 pilot pages (Task 5)
+  content-legacy/         archived VitePress .md tree, created in Task 4 (port source for the later phase)
   public/mark.svg         kept in place
 ```
 
@@ -90,7 +90,7 @@ Out of this plan (separate phases, do not implement here): porting the remaining
 
 ### Task 1: Stack verification spike
 
-Throwaway probe. Nothing in this task may touch the repo. If any check fails, stop, record the blocker in the ledger, and do not proceed to Task 2.
+Throwaway probe. No product code in this task may touch the repo (only the ledger file). If any check fails, stop, record the blocker in the ledger, and do not proceed to Task 2.
 
 **Files:**
 - Create (scratch only): `/tmp/opencode/docs-spike/` — minimal Next + fumadocs app
@@ -119,7 +119,10 @@ Expected: install succeeds, `pnpm-lock.yaml` created in scratch (never committed
 
 - [ ] **Step 3: Scaffold the minimal app**
 
-Create exactly: `next.config.mjs` (withMDX wrapper + `output: 'export'`), `source.config.ts` (`defineDocs({ dir: 'content/docs' })`), `postcss.config.mjs`, `tsconfig.json` (Next defaults), `app/layout.tsx` (RootProvider with static search), `app/page.tsx`, `app/docs/[[...slug]]/page.tsx` (with `generateStaticParams`), `app/api/search/route.ts` (`staticGET`), `content/docs/index.mdx` (one page with a `'use client'` component imported and rendered inline).
+Copy the Task 4 file shapes verbatim (same `next.config.mjs`, `source.config.ts`, `postcss.config.mjs`, `tsconfig.json`, `app/layout.tsx`, `app/page.tsx`, `app/docs/[[...slug]]/page.tsx`, `app/api/search/route.ts`, `lib/source.ts`, `mdx-components.tsx` contents — do not improvise variants), plus:
+- `source.config.ts` additionally registers a no-op remark plugin (`remarkPlugins: [() => () => {}]`) to prove the `mdxOptions.remarkPlugins` key shape the real plugin will use.
+- `components/hook-box.tsx` (`'use client'` at the top, renders a marker string, uses `useState`).
+- `content/docs/index.mdx` renders BOTH: (a) the `'use client'` component imported and rendered inline (must succeed), and (b) a hook-using component rendered WITHOUT `'use client'` (expected to fail the build — this is the real authoring risk; a passing build here would be false confidence).
 
 - [ ] **Step 4: Build and assert static output**
 
@@ -127,11 +130,11 @@ Create exactly: `next.config.mjs` (withMDX wrapper + `output: 'export'`), `sourc
 cd /tmp/opencode/docs-spike && pnpm exec next build
 ```
 
-Expected: exit 0. Assert all three: `out/index.html` exists, a static search payload file exists under `out/` (find any `*search*.json`), and the client component's marker text appears in the built HTML for the docs page.
+Expected: exit 0 for the passing page. Assert all three: `out/index.html` exists, the static search payload exists under `out/` — record its exact emitted path in the ledger (do not assume a `*search*.json` name; Task 4 asserts that recorded path), and the client component's marker text appears in the built HTML for the docs page. Then confirm the hook-without-`'use client'` case fails the build as expected; if it unexpectedly passes, record that too (it changes the Task 5 authoring rule).
 
 - [ ] **Step 5: Record the verdict in the ledger**
 
-Append to `.superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md`: exact locked versions from the scratch lockfile, the confirmed config keys, and either PASS (proceed) or the precise failure (stop).
+Append to `.superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md`: exact locked versions from the scratch lockfile, the confirmed config keys, the exact emitted search-payload path under `out/` (Task 4 asserts this path — record it verbatim), and either PASS (proceed) or the precise failure (stop).
 
 - [ ] **Step 6: Delete the scratch directory**
 
@@ -200,12 +203,127 @@ cd /home/ubuntu/xerena-ui && git add .superpowers/sdd/2026-09-24-xerena-docs-pre
 
 - [ ] **Step 2: Write `project.json`, `tsconfig.json`, `vite.config.ts`, `vitest.setup.ts`, `eslint.config.js`, `scripts/copy-css.mjs`**
 
-Mirror `packages/react` exactly, with these deliberate differences:
-- `project.json` `test` target gets `"dependsOn": ["^build"]` because vitest resolves `@xerena/react` to its `dist` at runtime (same reason `react-native` test/typecheck depend on `^build`).
-- `vite.config.ts` lib entry is an object: `{ index: resolve(..., 'src/index.ts'), mdx: resolve(..., 'src/mdx.ts') }` with `fileName: (format, entryName) => entryName === 'index' ? (format === 'es' ? 'index.js' : 'index.cjs') : \`${entryName}.${format === 'es' ? 'js' : 'cjs'}\``, `external: ['react', 'react-dom', '@xerena/react', '@xerena/tokens', '@xerena/styling']`.
-- `vitest.setup.ts` contains only `import '@testing-library/jest-dom/vitest'` (no matchMedia shim — nothing here touches it).
-- `eslint.config.js` extends `@xerena/eslint-config` and blocks `@xerena/native`, `react-native`, and `tailwindcss` via `no-restricted-imports`.
-- `scripts/copy-css.mjs` copies `src/styles.css` → `dist/styles.css` (plain copy; the file is hand-written, no build-time processing).
+Full contents (do not improvise variants):
+
+`project.json`:
+```json
+{
+  "name": "preview",
+  "projectType": "library",
+  "sourceRoot": "packages/preview/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": { "command": "pnpm build", "cwd": "packages/preview" },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": { "command": "vitest run", "cwd": "packages/preview" },
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc -p tsconfig.json --noEmit", "cwd": "packages/preview" }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint src", "cwd": "packages/preview" }
+    }
+  }
+}
+```
+
+The `test` target — and only the `test` target — gets `"dependsOn": ["^build"]`, because vitest resolves `@xerena/react` to its `dist` at runtime. Typecheck needs no such dependency: `tsconfig.base.json` paths map `@xerena/react` to source, so `tsc` never touches `dist`. (Do not copy `react-native`'s typecheck `dependsOn`; its situation differs.)
+
+`tsconfig.json`:
+```json
+{
+  "extends": "../../tools/tsconfig/tsconfig.react.json",
+  "compilerOptions": {
+    "types": ["vitest/globals", "@testing-library/jest-dom", "node", "react", "react-dom"]
+  },
+  "include": ["src", "vite.config.ts", "vitest.setup.ts"]
+}
+```
+
+`vite.config.ts`:
+```ts
+import { resolve } from 'node:path'
+import { defineConfig } from 'vitest/config'
+import dts from 'vite-plugin-dts'
+
+export default defineConfig({
+  plugins: [dts({ entryRoot: 'src', rollupTypes: true })],
+  build: {
+    lib: {
+      entry: {
+        index: resolve(import.meta.dirname, 'src/index.ts'),
+        mdx: resolve(import.meta.dirname, 'src/mdx.ts'),
+      },
+      name: 'XerenaPreview',
+      formats: ['es', 'cjs'],
+      fileName: (format, entryName) =>
+        entryName === 'index' ? (format === 'es' ? 'index.js' : 'index.cjs') : `${entryName}.${format === 'es' ? 'js' : 'cjs'}`,
+    },
+    cssCodeSplit: false,
+    rollupOptions: {
+      external: ['react', 'react-dom', '@xerena/react', '@xerena/tokens', '@xerena/styling'],
+    },
+  },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./vitest.setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+  },
+})
+```
+
+`vitest.setup.ts`:
+```ts
+import '@testing-library/jest-dom/vitest'
+```
+
+(No matchMedia shim — nothing here touches it.)
+
+`eslint.config.js`:
+```js
+import base from '@xerena/eslint-config'
+
+export default [
+  ...base,
+  {
+    files: ['**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            { name: '@xerena/native', message: 'preview package must not import native' },
+            { name: 'react-native', message: 'native code is not allowed here' },
+            { name: 'tailwindcss', message: 'preview package is Tailwind-free; use token CSS variables' },
+          ],
+        },
+      ],
+    },
+  },
+]
+```
+
+`scripts/copy-css.mjs`:
+```js
+import { copyFileSync, mkdirSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+mkdirSync(resolve(root, 'dist'), { recursive: true })
+copyFileSync(resolve(root, 'src/styles.css'), resolve(root, 'dist/styles.css'))
+console.log('copied dist/styles.css')
+```
+
+(Plain copy — unlike `react`'s script, there is nothing to concatenate: token values arrive at runtime via `@xerena/react/styles.css`, which the consumer also loads.)
 
 - [ ] **Step 3: Write the failing test `src/Preview.test.tsx`**
 
@@ -250,15 +368,36 @@ test('starts in dark mode when defaultMode is dark', () => {
   render(<Preview title="Demo" defaultMode="dark"><button type="button">Save</button></Preview>)
   expect(document.querySelector('[data-xerena-theme="dark"]')).not.toBeNull()
 })
+
+test('renders an exact explicit code string verbatim', () => {
+  const code = '<Button variant="primary" size="lg">Save</Button>'
+  render(<Preview title="Demo" code={code}><button type="button">Save</button></Preview>)
+  expect(screen.getByText(code).textContent).toBe(code)
+})
+
+test('works identically under prefers-reduced-motion (no animation dependency)', () => {
+  window.matchMedia = ((query: string) => ({
+    matches: query === '(prefers-reduced-motion: reduce)',
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia
+  render(<Preview title="Demo"><button type="button">Save</button></Preview>)
+  expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument()
+  fireEvent.click(screen.getByRole('button', { name: /dark/i }))
+  expect(document.querySelector('[data-xerena-theme="dark"]')).not.toBeNull()
+})
 ```
 
-- [ ] **Step 4: Run the test to verify it fails**
+- [ ] **Step 4: Install, then run the test to verify it fails**
 
 ```bash
-cd /home/ubuntu/xerena-ui/packages/preview && pnpm exec vitest run src/Preview.test.tsx
+cd /home/ubuntu/xerena-ui && pnpm install && cd packages/preview && pnpm exec vitest run src/Preview.test.tsx
 ```
 
-Expected: FAIL with "Failed to resolve import './Preview'".
+Plain `pnpm install` (not `--frozen-lockfile`): this is a brand-new workspace package, so the lockfile must be created/updated and devDeps linked before vitest exists. Expected: FAIL with "Failed to resolve import './Preview'" — not "command not found", which would mean the install step was skipped.
 
 - [ ] **Step 5: Write `src/theme.ts`**
 
@@ -337,6 +476,8 @@ export { previewTheme, type PreviewMode } from './theme'
 `styles.css` (all variables verified to exist in `packages/tokens/dist/tokens.css`):
 
 ```css
+/* Requires @xerena/react/styles.css loaded alongside this file: the --xr-*
+   variables below are defined there (packages/tokens/dist/tokens.css). */
 .xr-preview { border: 1px solid var(--xr-semantic-color-border); border-radius: var(--xr-radius-lg); overflow: hidden; background: var(--xr-semantic-color-background); }
 .xr-preview__header { padding: 12px 16px; border-bottom: 1px solid var(--xr-semantic-color-border); }
 .xr-preview__title { margin: 0; color: var(--xr-semantic-color-text); font-weight: 600; }
@@ -353,7 +494,7 @@ export { previewTheme, type PreviewMode } from './theme'
 cd /home/ubuntu/xerena-ui && pnpm install && pnpm exec nx run-many -t test typecheck lint --projects=preview --skip-nx-cache
 ```
 
-Plain `pnpm install` (not `--frozen-lockfile`) because the new workspace package requires a lockfile update. Expected: 5/5 tests pass, typecheck and lint clean. The `test` target's `dependsOn: ["^build"]` builds `@xerena/react` dist first because vitest resolves it at runtime.
+Plain `pnpm install` (not `--frozen-lockfile`) because the new workspace package requires a lockfile update. Expected: 7/7 tests pass, typecheck and lint clean. The `test` target's `dependsOn: ["^build"]` builds `@xerena/react` dist first because vitest resolves it at runtime.
 
 - [ ] **Step 9: Build the package**
 
@@ -363,7 +504,19 @@ cd /home/ubuntu/xerena-ui && pnpm exec nx run preview:build --skip-nx-cache
 
 Expected: `dist/index.js`, `dist/index.cjs`, `dist/index.d.ts`, `dist/styles.css` exist.
 
-- [ ] **Step 10: Commit**
+- [ ] **Step 10: Register the package in the root scripts**
+
+Edit root `package.json` scripts with these exact new values (append `,preview` to each list):
+
+```json
+"test": "nx run-many -t test --projects=tokens,react,react-native,brand,styling,preview",
+"lint": "nx run-many -t lint --projects=tokens,react,react-native,brand,styling,preview",
+"typecheck": "nx run-many -t typecheck --projects=tokens,react,react-native,brand,styling,preview"
+```
+
+Verify with `node -e "console.log(require('./package.json').scripts.test)"` that `preview` appears in all three.
+
+- [ ] **Step 11: Commit**
 
 ```bash
 cd /home/ubuntu/xerena-ui && git add packages/preview package.json pnpm-lock.yaml .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "feat(preview): public @xerena/preview package with live Preview surface"
@@ -375,12 +528,12 @@ cd /home/ubuntu/xerena-ui && git add packages/preview package.json pnpm-lock.yam
 
 **Files:**
 - Create: `packages/preview/src/mdx.ts`, `packages/preview/src/mdx.test.ts`
-- Modify: `packages/preview/src/index.ts` (no — keep the plugin OUT of the React entry so the core stays MDX-free)
+- Modify: none (`src/index.ts` is intentionally untouched — the plugin stays OUT of the React entry so the core stays MDX-free; it ships only through the `./mdx` export map)
 - Test: `packages/preview/src/mdx.test.ts`
 
 **Interfaces:**
 - Consumes: nothing from Task 2 (independent file). Test harness: `unified@11.0.5` + `remark-parse@11.0.0` + `remark-mdx@3.1.1` as devDependencies
-- Produces for Task 4: `previewCodePlugin` factory, importable as `@xerena/preview/mdx`, registered via fumadocs-mdx `mdxOptions.remarkPlugins`. Behaviour contract: `<Preview>` flow elements without an explicit `code` attribute gain one containing the exact authored children source; everything else is byte-identical
+- Produces for Task 4: `previewCodePlugin` factory, importable as `@xerena/preview/mdx`, registered via fumadocs-mdx `mdxOptions.remarkPlugins`. Behaviour contract: `<Preview>` flow elements (`mdxJsxFlowElement`) without an explicit `code` attribute gain one containing the exact authored children source; everything else is byte-identical. Known limitation (by design): inline `<Preview>` inside a paragraph (`mdxJsxTextElement`) is not handled — previews are block-level only; document this in the ledger.
 
 - [ ] **Step 1: Add the test-only parser dependencies**
 
@@ -392,7 +545,7 @@ These are dev-only; the plugin itself has zero runtime dependencies. Commit the 
 
 - [ ] **Step 2: Write the failing test `src/mdx.test.ts`**
 
-```tsx
+```ts
 import remarkMdx from 'remark-mdx'
 import remarkParse from 'remark-parse'
 import { unified } from 'unified'
@@ -568,6 +721,8 @@ Expected: all green, `dist/mdx.js`, `dist/mdx.cjs`, `dist/mdx.d.ts` exist.
 cd /home/ubuntu/xerena-ui && git add packages/preview pnpm-lock.yaml .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "feat(preview): MDX source-capture plugin with explicit-code escape hatch"
 ```
 
+Record in the ledger: the plugin lives at `src/mdx.ts` (the spec's file map says `src/mdx-entry.ts` — the shorter name won because the export map already namespaces it as `@xerena/preview/mdx`).
+
 ---
 
 ### Task 4: Docs scaffold (Next.js + fumadocs, static export)
@@ -577,8 +732,8 @@ This task replaces the VitePress toolchain in `apps/docs`. Legacy `.md` content 
 **Files:**
 - Create: `apps/docs/next.config.mjs`, `apps/docs/source.config.ts`, `apps/docs/postcss.config.mjs`, `apps/docs/tsconfig.json`, `apps/docs/eslint.config.js`, `apps/docs/app/layout.tsx`, `apps/docs/app/global.css`, `apps/docs/app/page.tsx`, `apps/docs/app/docs/[[...slug]]/page.tsx`, `apps/docs/app/api/search/route.ts`, `apps/docs/lib/source.ts`, `apps/docs/mdx-components.tsx`, `apps/docs/content/docs/meta.json`, `apps/docs/content/docs/index.mdx`
 - Modify: `apps/docs/package.json`, `apps/docs/project.json`, root `.gitignore`
-- Move: `apps/docs/guide/**` + `apps/docs/brand.md` → `apps/docs/content-legacy/` (git mv, history preserved)
-- Delete: `apps/docs/.vitepress/` (config only — `dist/` and `cache/` are gitignored build output)
+- Move: `apps/docs/guide/**` + `apps/docs/brand.md` + `apps/docs/index.md` → `apps/docs/content-legacy/` (git mv, history preserved)
+- Keep: `apps/docs/.vitepress/` untouched in this task. It is deleted in Task 5 Step 6, only after the pilot `docs:build` gate passes (spec Acceptance: VitePress sources are removed only once the replacement is proven).
 
 **Interfaces:**
 - Consumes: `Preview` from `@xerena/preview` (Task 2), `@xerena/preview/styles.css`, `@xerena/react/styles.css`, `previewCodePlugin` from `@xerena/preview/mdx` (Task 3)
@@ -587,7 +742,9 @@ This task replaces the VitePress toolchain in `apps/docs`. Legacy `.md` content 
 - [ ] **Step 1: Install the docs dependencies**
 
 ```bash
-cd /home/ubuntu/xerena-ui/apps/docs && pnpm add next@16.3.6 react@19.3.0 react-dom@19.3.0 fumadocs-core@16.15.14 fumadocs-ui@16.15.14 fumadocs-mdx@15.4.4 tailwindcss@4.3.3 @tailwindcss/postcss@^4 @xerena/react@workspace:* @xerena/preview@workspace:* @xerena/tokens@workspace:* && pnpm add -D typescript@^5.6.0 @types/react @types/react-dom @types/mdx eslint@^9 @xerena/eslint-config@workspace:*
+cd /home/ubuntu/xerena-ui/apps/docs && pnpm add next@16.3.6 react@19.3.0 react-dom@19.3.0 fumadocs-core@16.15.14 fumadocs-ui@16.15.14 fumadocs-mdx@15.4.4 tailwindcss@4.3.3 @tailwindcss/postcss@^4 @xerena/react@workspace:* @xerena/preview@workspace:* && pnpm add -D typescript@^5.6.0 @types/react @types/react-dom @types/mdx eslint@^9 @xerena/eslint-config@workspace:*
+
+(`@xerena/tokens` is deliberately absent: nothing in the docs app imports it directly — token values arrive at runtime through `@xerena/react/styles.css`, which the layout loads. See the comment at the top of `@xerena/preview`'s `styles.css`.)
 ```
 
 - [ ] **Step 2: Write `next.config.mjs`**
@@ -724,7 +881,35 @@ export function getMDXComponents(components?: MDXComponents) {
 
 - [ ] **Step 5: Write the routes — `app/page.tsx`, `app/docs/[[...slug]]/page.tsx`, `app/api/search/route.ts`, `content/docs/meta.json`, `content/docs/index.mdx`**
 
-The docs page follows the standard fumadocs pattern (`source.getPage`, `notFound()`, `DocsPage`/`DocsTitle`/`DocsDescription`/`DocsBody`, `generateStaticParams` returning `source.generateParams()`). The search route:
+`app/docs/[[...slug]]/page.tsx` (if Task 1 recorded a different page shape for the installed fumadocs version, that shape wins — do not improvise):
+
+```tsx
+import { source } from '@/lib/source'
+import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/layouts/docs/page'
+import { notFound } from 'next/navigation'
+
+export default async function Page(props: { params: Promise<{ slug?: string[] }> }) {
+  const params = await props.params
+  const page = source.getPage(params.slug)
+  if (!page) notFound()
+  const MDX = page.data.body
+  return (
+    <DocsPage toc={page.data.toc} full={page.data.full}>
+      <DocsTitle>{page.data.title}</DocsTitle>
+      <DocsDescription>{page.data.description}</DocsDescription>
+      <DocsBody>
+        <MDX />
+      </DocsBody>
+    </DocsPage>
+  )
+}
+
+export function generateStaticParams() {
+  return source.generateParams()
+}
+```
+
+The search route:
 
 ```ts
 import { source } from '@/lib/source'
@@ -736,13 +921,13 @@ export const { staticGET: GET } = createFromSource(source)
 
 `content/docs/index.mdx` is a one-paragraph placeholder welcome page (real landing content ships with the port phase).
 
-- [ ] **Step 6: Archive legacy content and remove VitePress**
+- [ ] **Step 6: Archive legacy content (keep VitePress toolchain for now)**
 
 ```bash
-cd /home/ubuntu/xerena-ui/apps/docs && mkdir -p content-legacy && git mv guide content-legacy/guide && git mv brand.md content-legacy/brand.md && rm -rf .vitepress
+cd /home/ubuntu/xerena-ui/apps/docs && mkdir -p content-legacy && git mv guide content-legacy/guide && git mv brand.md content-legacy/brand.md && git mv index.md content-legacy/index.md
 ```
 
-Expected: `content/docs/` contains only the new `index.mdx` + `meta.json`; `content-legacy/` holds the full old tree; no `.vitepress/` directory remains.
+Expected: `content/docs/` contains only the new `index.mdx` + `meta.json`; `content-legacy/` holds the full old tree (`guide/`, `brand.md`, `index.md`); `.vitepress/` is still present and untouched — it is deleted in Task 5 Step 6, only after the pilot `docs:build` gate passes.
 
 - [ ] **Step 7: Update root `.gitignore`, root scripts, and build**
 
@@ -760,7 +945,7 @@ Update root `package.json`: add `docs` to the `lint` and `typecheck` `--projects
 cd /home/ubuntu/xerena-ui && pnpm install && pnpm exec nx run docs:build --skip-nx-cache
 ```
 
-Plain `pnpm install` (not `--frozen-lockfile`) because the rewritten dependencies require a lockfile update. Expected: exit 0, `apps/docs/out/index.html` exists, a static search payload exists under `out/`.
+Plain `pnpm install` (not `--frozen-lockfile`) because the rewritten dependencies require a lockfile update. Expected: exit 0, `apps/docs/out/index.html` exists, and the static search payload exists at the exact path Task 1 recorded in the ledger (do not guess the filename — assert that recorded path).
 
 - [ ] **Step 8: Commit**
 
@@ -772,11 +957,11 @@ cd /home/ubuntu/xerena-ui && git add apps/docs package.json pnpm-lock.yaml .giti
 
 ### Task 5: Port guides + 3 pilot component pages
 
-Ports, in order: all six guide pages (`getting-started`, `theming`, `motion`, `styling`, `native`, `brand`), then Button, Select, Dialog with live previews. Source of truth for each page is its counterpart under `apps/docs/content-legacy/`.
+Ports, in order: the five guide pages (`getting-started`, `theming`, `motion`, `styling`, `native`) plus root `brand.md` — six `.mdx` files total — then Button, Select, Dialog with live previews. Source of truth for each page is its counterpart under `apps/docs/content-legacy/` (`content-legacy/guide/<name>.md`, `content-legacy/brand.md`). (`content-legacy/index.md` is archived but not ported — the new `content/docs/index.mdx` placeholder replaces it.)
 
 **Files:**
-- Create: `content/docs/guide/*.mdx`, `content/docs/brand.mdx`, `content/docs/**/meta.json` as needed, `content/docs/components/actions/button.mdx`, `content/docs/components/form/select.mdx`, `content/docs/components/feedback/dialog.mdx`, plus `_select-demo.tsx` and `_dialog-demo.tsx` client components next to their pages
-- Modify: `content/docs/meta.json` (add sections)
+- Create: `apps/docs/content/docs/guide/*.mdx`, `apps/docs/content/docs/brand.mdx`, `apps/docs/content/docs/**/meta.json` as needed, `apps/docs/content/docs/components/actions/button.mdx`, `apps/docs/content/docs/components/form/select.mdx`, `apps/docs/content/docs/components/feedback/dialog.mdx`, plus `_button-demo.tsx`, `_select-demo.tsx`, and `_dialog-demo.tsx` client components next to their pages
+- Modify: `apps/docs/content/docs/meta.json` (add sections)
 - Test: manual render verification + `docs:build` (MDX is type-checked at build)
 
 **Interfaces:**
@@ -784,35 +969,56 @@ Ports, in order: all six guide pages (`getting-started`, `theming`, `motion`, `s
 - Produces: the proven port pattern the scale phase copies (record the exact per-page recipe in the ledger)
 
 Rules for every ported page (no exceptions):
-- Interactive examples go through `<Preview title="...">…</Preview>`; no example is duplicated as a static fence — the plugin supplies the code panel.
+- Interactive examples go through `<Preview title="...">…</Preview>` inside `'_*-demo.tsx'` client files (see below) with an explicit `code` prop showing the reader-facing source. The remark plugin cannot fire here — it only processes `.mdx`, not the `.tsx` demo files — so the escape hatch is the mechanism, not the fallback.
 - `::: tip … :::` containers become `<Callout>…</Callout>`; keep the "React Native" notes that Phase 6 added.
 - API tables are copied verbatim (MDX is a superset of Markdown).
-- Stateful examples (anything needing `useState` or event-handler props) live in a `'_*-demo.tsx'` file with `'use client'` at the top, imported by the page. MDX pages themselves stay server components, so inline JSX in the page must not pass function props.
-- Pilot coverage: Button = inline stateless example; Select = `_select-demo.tsx` (open/select/close); Dialog = `_dialog-demo.tsx` (open/dismiss).
+- Every example using `@xerena/react` components lives in a `'_*-demo.tsx'` file with `'use client'` at the top, imported by the page — no exceptions, not even for Button. Rationale: `packages/react/src` contains zero `'use client'` directives and `Button` uses `useState` (via `usePress`), so even a handler-free `<Button>` rendered inline in an RSC MDX page fails the build. MDX pages themselves stay server components and never contain component JSX directly.
+- Pilot coverage: Button = `_button-demo.tsx` (variants/sizes, no handlers needed); Select = `_select-demo.tsx` (open/select/close); Dialog = `_dialog-demo.tsx` (open/dismiss).
 
-- [ ] **Step 1: Port the six guide pages**
+- [ ] **Step 1: Port the five guide pages plus brand**
 
-Convert each `content-legacy/guide/<name>.md` and `content-legacy/brand.md` to `content/docs/guide/<name>.mdx` + `content/docs/brand.mdx`, applying the `Callout` rule. Keep headings, tables, and notes byte-identical otherwise.
+Convert each `content-legacy/guide/<name>.md` (`getting-started`, `theming`, `motion`, `styling`, `native`) and `content-legacy/brand.md` to `content/docs/guide/<name>.mdx` + `content/docs/brand.mdx`, applying the `Callout` rule. Keep headings, tables, and notes byte-identical otherwise.
 
 - [ ] **Step 2: Write the Button pilot**
 
-`content/docs/components/actions/button.mdx`: port the legacy API table and prose, then:
+`content/docs/components/actions/_button-demo.tsx` (starts with `'use client'`):
 
-```mdx
+```tsx
+'use client'
+
 import { Button } from '@xerena/react'
+import { Preview } from '@xerena/preview'
 
-<Preview title="Primary button">
-  <Button variant="primary" size="md">Save</Button>
-</Preview>
+export function ButtonDemo() {
+  return (
+    <Preview title="Primary button" code='<Button variant="primary" size="md">Save</Button>'>
+      <Button variant="primary" size="md">Save</Button>
+    </Preview>
+  )
+}
 ```
 
-No `onClick` (function props cannot cross the server/client boundary inline). Render-verify with `pnpm exec nx run docs:dev` and confirm the code panel shows the exact authored source.
+Note the explicit `code` prop: it shows the example source a reader would write, not the demo wrapper. `content/docs/components/actions/button.mdx` ports the legacy API table and prose, then renders `<ButtonDemo />` (imported from `./_button-demo`). Render-verify with `pnpm exec nx run docs:dev` at `http://localhost:3000/xerena-ui` (the dev server serves under the `basePath`) and confirm the code panel shows the exact authored source.
 
 - [ ] **Step 3: Write the Select and Dialog pilots with client demos**
 
-`_select-demo.tsx` and `_dialog-demo.tsx` (each starting with `'use client'`), imported and rendered inside `<Preview>` blocks on their pages. Each demo must exercise the component's core interaction (Select: open the list, pick an option, close; Dialog: open, dismiss via close control).
+`_select-demo.tsx` and `_dialog-demo.tsx` (each starting with `'use client'`), imported and rendered inside `<Preview>` blocks on their pages. Compose the exact web APIs — `Dialog` is a compound object (`Dialog.Root`, `Dialog.Content`, `Dialog.Close`, `Dialog.Title`, `Dialog.Description`, plus `Portal`/`Overlay`; see `packages/react/src/components/feedback/Dialog.tsx:36`), and `Select` is a native-`<select>` wrapper whose props extend `React.SelectHTMLAttributes<HTMLSelectElement>` with an added `error?: boolean` (see `packages/react/src/components/form/Select.tsx`). Each demo must exercise the component's core interaction (Select: open the list, pick an option, close; Dialog: open, dismiss via close control). Risk to note in the ledger: colocated `_<name>-demo.tsx` files sit inside `content/docs/` — confirm the fumadocs loader ignores non-MDX files (the `docs:build` gate in Step 5 proves it; if it does not, move the demos to `app/` and import by path).
 
-- [ ] **Step 4: Update `meta.json` files and build**
+- [ ] **Step 4: Prove auto-capture end to end, then update `meta.json` files and build**
+
+First, prove the remark plugin fires inside the real docs pipeline (its unit tests in Task 3 prove the transform; this proves the wiring). Create a temporary `content/docs/__spike.mdx` containing a server-safe inline example — plain HTML only, no `@xerena/react` imports:
+
+```mdx
+---
+title: Spike (temporary)
+---
+
+<Preview title="Inline spike">
+  <button type="button">Plain</button>
+</Preview>
+```
+
+Build, then assert the emitted HTML for `/__spike` contains the code panel with the exact source `<button type="button">Plain</button>`. Then delete `content/docs/__spike.mdx` — it must not ship.
 
 Add the new sections/pages to the relevant `meta.json` files, then:
 
@@ -820,13 +1026,21 @@ Add the new sections/pages to the relevant `meta.json` files, then:
 cd /home/ubuntu/xerena-ui && pnpm exec nx run docs:build --skip-nx-cache
 ```
 
-Expected: exit 0, all new routes present under `apps/docs/out/`.
+Expected: exit 0, all new routes present under `apps/docs/out/`, no `__spike` residue.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/ubuntu/xerena-ui && git add apps/docs/content apps/docs/mdx-components.tsx .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "docs: port guides and Button/Select/Dialog pilots with live previews"
+cd /home/ubuntu/xerena-ui && git add apps/docs/content .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "docs: port guides and Button/Select/Dialog pilots with live previews"
 ```
+
+- [ ] **Step 6: Delete the VitePress toolchain (only after the Step 4 gate passed)**
+
+```bash
+cd /home/ubuntu/xerena-ui/apps/docs && rm -rf .vitepress && cd /home/ubuntu/xerena-ui && git add -A apps/docs/.vitepress .gitignore && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "chore(docs): remove VitePress toolchain after fumadocs pilots verified"
+```
+
+This step exists because the spec requires VitePress sources to be removed only once the replacement is proven — the passing `docs:build` in Step 4 is that proof. Do not run it if Step 4 failed. Also delete the now-dead root `.gitignore` lines `apps/docs/.vitepress/dist/` and `apps/docs/.vitepress/cache/` in the same commit.
 
 ---
 
@@ -834,7 +1048,7 @@ cd /home/ubuntu/xerena-ui && git add apps/docs/content apps/docs/mdx-components.
 
 **Files:**
 - Create: `.github/workflows/docs.yml`
-- Test: `npx -y actionlint .github/workflows/docs.yml` (repo precedent for workflow validation)
+- Test: `npx -y actionlint .github/workflows/docs.yml` (validates the workflow file parses and its actions exist)
 
 **Interfaces:**
 - Consumes: Task 4 (`docs:build` emitting `apps/docs/out/`)
@@ -927,7 +1141,17 @@ cd /home/ubuntu/xerena-ui && pnpm exec changeset status && grep '"version"' pack
 
 Expected: changeset status lists `@xerena/preview` as a pending minor release; `packages/preview/package.json` still reads `"version": "0.0.0"` (the release step bumps it to `0.1.0`).
 
-- [ ] **Step 3: Commit**
+- [ ] **Step 3: Prove a clean consumer install (pack smoke test)**
+
+The docs app consumes the package via workspace link, which hides packaging mistakes (missing `files`, broken export map, forgotten CSS). Prove the published artifact installs cleanly:
+
+```bash
+cd /home/ubuntu/xerena-ui/packages/preview && pnpm exec nx run preview:build --skip-nx-cache && npm pack --pack-destination /tmp/opencode/preview-pack && mkdir -p /tmp/opencode/preview-consumer && cd /tmp/opencode/preview-consumer && pnpm init -y >/dev/null && pnpm add /tmp/opencode/preview-pack/xerena-preview-0.0.0.tgz react@19.3.0 react-dom@19.3.0 && node -e "const p=require('./node_modules/@xerena/preview/package.json'); for (const k of ['./mdx','./styles.css']) if (!p.exports[k]) throw new Error('missing export '+k); require('fs').accessSync('./node_modules/@xerena/preview/dist/index.js'); require('fs').accessSync('./node_modules/@xerena/preview/dist/mdx.js'); require('fs').accessSync('./node_modules/@xerena/preview/dist/styles.css'); console.log('pack smoke OK')"
+```
+
+Expected: `pack smoke OK`. This does not install `@xerena/react` (a peer) — the check is packaging shape only, not rendering. Afterwards `rm -rf /tmp/opencode/preview-pack /tmp/opencode/preview-consumer`.
+
+- [ ] **Step 4: Commit**
 
 ```bash
 cd /home/ubuntu/xerena-ui && git add .changeset/preview-minor.md .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "chore: changeset for @xerena/preview 0.1.0 release"
