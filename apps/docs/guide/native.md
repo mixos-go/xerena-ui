@@ -50,7 +50,7 @@ native-only behavior.
 | [Button](/guide/components/actions/button) | `variant`, `size`, `loading`, `animated`, `fullWidth`, `disabled`, `leftIcon`/`rightIcon`, `onPress` | `Pressable` + `Text`; sizes via token maps | No `asChild`; `loading` → `accessibilityState.busy` |
 | [IconButton](/guide/components/actions/icon-button) | `Button` minus icons; `accessibilityLabel` | `Pressable`, fixed square hit target | No `asChild`; label required for a11y |
 | [Link](/guide/components/actions/link) | `variant`, `href`, `children` | `Text` with primary/muted color | No `asChild`; `href`/`target` accepted but inert (no router) |
-| ButtonGroup | `orientation`, `spacing`, `value`, `onValueChange` | Row/column flex + selection context | `as` for Link only; group itself is a `View` |
+| ButtonGroup | `orientation`, `spacing`, `value`, `onValueChange` | Row/column flex + selection context | No `as`/`asChild`; group itself is a `View` |
 
 Web `asChild` has no native equivalent — these render the primitive directly;
 use `accessibilityRole` / `accessibilityLabel` for semantics.
@@ -108,7 +108,7 @@ use `accessibilityRole` / `accessibilityLabel` for semantics.
 
 | Component | API summary | Native approach | Notes |
 |---|---|---|---|
-| [Table](/guide/components/data/table) | `variant`, `size`, `frozenHeader`, `maxHeight` + toolkit (`Head`, `Body`, `Row`, `Cell`, `TableCheckbox`, `RowActions`, `EditableCell`, `Caption`) | View-based grid (no native table) | `frozenHeader` via `ScrollView` `stickyHeaderIndices`; a11y via `role="grid"`/`"row"`/`"cell"`/`"columnheader"` + `accessibilityRole` where supported; `EditableCell` uses `TextInput` |
+| [Table](/guide/components/data/table) | `variant`, `size`, `frozenHeader`, `maxHeight` + toolkit (`Head`, `Body`, `Row`, `Cell`, `TableCheckbox`, `RowActions`, `EditableCell`, and `Caption` via `Table.Caption`) | View-based grid (no native table) | `frozenHeader` via `ScrollView` `stickyHeaderIndices`; a11y via `role="grid"`/`"row"`/`"cell"`/`"columnheader"` + `accessibilityRole` where supported; `EditableCell` uses `TextInput` |
 | [Pagination](/guide/components/data/pagination) | `total`, `pageSize`, `current`, `onChange`, `siblingCount`, `variant` (page/simple) | Page buttons + prev/next; simple `current / pages` | `renderPagePreview` removed (hover has no touch equivalent) |
 
 ### Feedback (8)
