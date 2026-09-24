@@ -33,12 +33,19 @@ describe('Slider', () => {
     expect(slider.props.accessibilityState).toMatchObject({ disabled: true })
   })
 
-  it('calls onValueChange on track press', () => {
+  it('calls onValueChange on track press at the pressed position', () => {
     const onValueChange = jest.fn()
     render(<Slider testID="slider" min={0} max={100} onValueChange={onValueChange} />, { wrapper: wrapper() })
-    // Simulate track press at 50% position
-    fireEvent.press(screen.getByTestId('slider'))
-    // Note: Full interaction testing requires mocking layout
+    fireEvent(screen.getByTestId('slider-track'), 'layout', { nativeEvent: { layout: { width: 200, height: 4 } } })
+    fireEvent.press(screen.getByTestId('slider-track'), { nativeEvent: { locationX: 100, locationY: 2 } })
+    expect(onValueChange).toHaveBeenCalledWith(50)
+    expect(screen.getByTestId('slider').props.accessibilityValue).toEqual({ min: 0, max: 100, now: 50 })
+  })
+
+  it('renders a visual-only thumb inside the track', () => {
+    render(<Slider testID="slider" />, { wrapper: wrapper() })
+    expect(screen.getByTestId('slider-track')).toBeTruthy()
+    expect(screen.getByTestId('slider-thumb')).toBeTruthy()
   })
 
   it('controlled value takes precedence', () => {

@@ -39,6 +39,8 @@ export function Slider({
 
   const [thumbPosition, setThumbPosition] = useState<number>(0)
   const [trackLayout, setTrackLayout] = useState<{ x: number; y: number; width: number; height: number } | null>(null)
+  const trackRef = useRef<View>(null)
+  const trackOrigin = useRef({ x: 0, y: 0 })
 
   const valueToPosition = useCallback(
     (val: number) => {
@@ -69,6 +71,17 @@ export function Slider({
     }
   }, [currentValue, trackLayout, valueToPosition])
 
+  const handleTrackLayout = useCallback(
+    (event: { nativeEvent: { layout: { width: number; height: number } } }) => {
+      const { width, height } = event.nativeEvent.layout
+      setTrackLayout({ x: 0, y: 0, width, height })
+      trackRef.current?.measureInWindow((x, y) => {
+        trackOrigin.current = { x: x ?? 0, y: y ?? 0 }
+      })
+    },
+    [],
+  )
+
   const handleTrackPress = (event: { nativeEvent: { locationX: number; locationY: number } }) => {
     if (isDisabled || !trackLayout) return
     const pos = orientation === 'horizontal' ? event.nativeEvent.locationX : event.nativeEvent.locationY
@@ -77,23 +90,26 @@ export function Slider({
     onValueChange?.(newValue)
   }
 
+  const positionToValueRef = useRef(positionToValue)
+  positionToValueRef.current = positionToValue
+  const disabledRef = useRef(isDisabled)
+  disabledRef.current = isDisabled
+  const orientationRef = useRef(orientation)
+  orientationRef.current = orientation
+  const changeRef = useRef({ setInternalValue, onValueChange })
+  changeRef.current = { setInternalValue, onValueChange }
+
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => !isDisabled,
-      onMoveShouldSetPanResponder: () => !isDisabled,
-      onPanResponderGrant: () => {
-        if (trackLayout) {
-          // Initial position handled by move
-        }
-      },
+      onStartShouldSetPanResponder: () => !disabledRef.current,
+      onMoveShouldSetPanResponder: () => !disabledRef.current,
       onPanResponderMove: (_, gestureState) => {
-        if (!trackLayout) return
-        const pos = orientation === 'horizontal'
-          ? gestureState.moveX
-          : gestureState.moveY
-        const newValue = positionToValue(pos)
-        setInternalValue(newValue)
-        onValueChange?.(newValue)
+        const origin = trackOrigin.current
+        const horizontal = orientationRef.current === 'horizontal'
+        const pos = horizontal ? gestureState.moveX - origin.x : gestureState.moveY - origin.y
+        const newValue = positionToValueRef.current(pos)
+        changeRef.current.setInternalValue(newValue)
+        changeRef.current.onValueChange?.(newValue)
       },
       onPanResponderRelease: () => {},
     }),
@@ -143,7 +159,9 @@ export function Slider({
   return (
     <View testID={testID} style={containerStyle} accessibilityRole="adjustable" accessibilityState={{ disabled: isDisabled }} accessibilityValue={{ min, max, now: currentValue }}>
       <Pressable
-        onLayout={(e) => setTrackLayout(e.nativeEvent.layout)}
+        ref={trackRef}
+        testID={testID ? `${testID}-track` : undefined}
+        onLayout={handleTrackLayout}
         onPress={handleTrackPress}
         disabled={isDisabled}
         style={trackStyle}
@@ -152,11 +170,9 @@ export function Slider({
         accessibilityValue={{ min, max, now: currentValue }}
       >
         <View style={fillStyle} />
-        <Pressable
+        <View
           testID={testID ? `${testID}-thumb` : undefined}
-          disabled={isDisabled}
           style={thumbStyle}
-          {...panResponder.panHandlers}
         />
       </Pressable>
     </View>
