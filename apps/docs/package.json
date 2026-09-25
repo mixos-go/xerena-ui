@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vitepress dev .",
-    "build": "vitepress build .",
-    "preview": "vitepress preview ."
+    "dev": "next dev",
+    "build": "next build",
+    "preview": "next start"
   },
   "devDependencies": {
     "@types/mdx": "^2.0.14",
@@ -15,8 +15,7 @@
     "@types/react-dom": "^19.0.0",
     "@xerena/eslint-config": "workspace:^",
     "eslint": "^9",
-    "typescript": "^5.6.0",
-    "vitepress": "^1.6.0"
+    "typescript": "^5.6.0"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4",
