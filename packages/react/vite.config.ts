@@ -13,7 +13,7 @@ export default defineConfig({
     },
     cssCodeSplit: false,
     rollupOptions: {
-      external: ['react', 'react-dom', '@xerena/tokens', '@xerena/styling'],
+      external: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', '@xerena/tokens', '@xerena/styling'],
     },
   },
   test: {

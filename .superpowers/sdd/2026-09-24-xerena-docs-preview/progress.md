@@ -316,3 +316,105 @@ mode uses `.dark`). Hexes verified in `packages/tokens/dist/tokens.css`.
    re-adjusts automatically and the build gate passed).
 
 Committed per Step 8 as `feat(docs): rebuild docs app on Next.js + fumadocs with static export`.
+
+## Task 5: Port guides + 3 pilots — BLOCKED (2026-09-25)
+
+Steps 1–3 executed in order and content-verified (see below). Step 4 gate
+is red: `docs:build` fails on two independent defects, both outside Task 5
+scope (`apps/docs/content` only). Per the brief ("on failure: stop and
+report"), stopped before Step 4 meta updates, Step 5 commit, and Step 6.
+No commits made for Task 5. Working tree holds the Step 1–3 files
+(uncommitted) plus the `__spike` proof scaffolding (also uncommitted).
+
+### Steps 1–3 (done, verified)
+
+- Step 1: `content/docs/guide/{getting-started,theming,motion,styling,native}.mdx`
+  + `content/docs/brand.mdx`. Body byte-identical to `content-legacy`
+  counterparts (verified via `diff` past a 5-line title/description
+  frontmatter block); headings, tables, RN notes unchanged. No `:::`
+  containers exist in any of the six sources (grep exit 1), so the Callout
+  rule applies only to the pilots.
+- Step 2: `components/actions/_button-demo.tsx` verbatim per plan
+  (`'use client'` first line, `<Preview title + explicit code>`), and
+  `button.mdx` (legacy prose/table + `<Callout title="React Native">` in
+  place of the `::: tip` block + `<ButtonDemo />` after Usage). Content
+  diff vs legacy shows only the frontmatter/imports/Callout/demo deltas.
+- Step 3: `_select-demo.tsx` (controlled native `<select>`, value state
+  exercises pick/close) and `_dialog-demo.tsx` (exact compound API:
+  `Dialog.Root/Portal/Overlay/Content/Close/Title/Description`; open via
+  native `<button>`, dismiss via two `Dialog.Close` controls), each
+  `'use client'` + explicit reader-facing `code` prop inside `<Preview>`;
+  `select.mdx` / `dialog.mdx` ported the same way as Button. Content diffs
+  clean (same expected deltas only).
+- Recipe notes for the scale phase: (a) `ButtonProps` has no `onClick`
+  (excess-prop type error), so demos use a native `<button>` for triggers
+  and `Dialog.Close` for in-dialog dismissal; (b) colocated `_*-demo.tsx`
+  files resolve fine as relative MDX imports (the button failure below
+  happens at demo module *evaluation*, i.e. after successful resolution);
+  (c) all 9 new MDX files compile — both failures below are
+  prerender-execution errors, never MDX parse errors — and explicit
+  `Callout`/`Demo` imports in MDX work without global registration.
+
+### Step 4 proof attempt 1 (spike + temp meta entry): FAIL
+
+`content/docs/__spike.mdx` verbatim per plan (no imports, plain-HTML
+`<Preview>`), `meta.json` temporarily gained `"__spike"`.
+`nx run docs:build --skip-nx-cache` fails prerendering `/docs/__spike`:
+
+```text
+Error: Expected component `Preview` to be defined: you likely forgot to import, pass, or provide it.
+    at <unknown> (content/docs/__spike.mdx.js?collection=docs:32:9)
+```
+
+Root cause (traced, not guessed): `app/docs/[[...slug]]/page.tsx`
+(Task 4 verbatim) renders `<MDX />` with no `components` prop, and
+`mdx-components.tsx` exports only `getMDXComponents` — which nothing
+calls. Next.js honors only the `useMDXComponents` export (per
+`node_modules/next/dist/docs/.../mdx-components.md`), and nothing in
+`fumadocs-mdx`/`fumadocs-ui` dist references `getMDXComponents` either
+(grep over all three dists: zero hits), so the global registry —
+including Preview and the fumadocs default components — never reaches
+the page. Task 1 could not catch this (ledger: "the `Preview` key ...
+could not be exercised in the spike"). Proposed fix (Task 4 scope, needs
+plan amendment + own commit): in the docs page, `import
+{ getMDXComponents } from '@/mdx-components'` and render `<MDX
+components={getMDXComponents()} />`. Do NOT work around it with an
+explicit Preview import in the spike — that would mask the defect the
+proof exists to catch.
+
+### Step 4 proof attempt 2 (spike moved aside, meta reverted): FAIL
+
+Same command, now fails prerendering `/docs/components/actions/button`:
+
+```text
+Error: Minified React error #527; visit https://react.dev/errors/527?args[]=19.3.0-canary-cbb046ab-20260731&args[]=19.3.0 ...
+    at <unknown> (../../packages/react/dist/index.js:11983:11)
+    at module evaluation (../../packages/react/dist/index.js:12048:1)
+    at module evaluation (content/docs/components/actions/_button-demo.tsx:3:1)
+```
+
+Root cause (traced, not guessed): `packages/react/src/components/feedback/Toast.tsx:2`
+imports `react-dom/client`, but `packages/react/vite.config.ts` externals
+only exact-match `'react-dom'` — so a full second copy of react-dom is
+bundled into `@xerena/react/dist/index.js` (two `rendererPackageName:
+"react-dom"` regions, lines ~11999 and ~30812). At docs prerender, that
+bundled react-dom 19.3.0 reads `react` as resolved by Next 16, which is
+Next's own compiled canary (`19.3.0-canary-cbb046ab-20260731`, confirmed
+present in `.next/server/chunks/0k09_next_dist_compiled_*.js`; no canary
+exists in `pnpm-lock.yaml` or on disk) — exact-version check fails.
+Invisible to the package's own suite (vitest resolves workspace stable
+19.3.0 everywhere). Proposed fix (`packages/react` scope, needs plan
+amendment + own commit with review): external `react-dom/client` (and
+`react/jsx-runtime` for safety) in `vite.config.ts`, rebuild, re-run
+`docs:build`.
+
+### State left for the amendment session
+
+- Uncommitted: 6 guide/brand `.mdx`, 3 pilot `.mdx`, 3 `_*-demo.tsx`,
+  `__spike.mdx`, `content/docs/meta.json` (`"__spike"` entry = proof
+  scaffolding, final section meta.jsons NOT yet written), this ledger
+  entry. `apps/docs/tsconfig.json` build churn restored via checkout.
+- `git status --short` shows only the above (plus no other modifications).
+- Step 4 order preserved for retry: files are in place up to the spike
+  proof; after both fixes land elsewhere, resume at Step 4 (assert spike
+  HTML → delete spike → write final meta.jsons → `docs:build` green).
