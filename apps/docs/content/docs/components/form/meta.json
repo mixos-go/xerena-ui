@@ -6,7 +6,13 @@
     "textarea",
     "select",
     "checkbox",
+    "checkbox-group",
     "radio",
-    "switch"
+    "radio-group",
+    "switch",
+    "slider",
+    "combobox",
+    "input-group",
+    "number-input"
   ]
 }
