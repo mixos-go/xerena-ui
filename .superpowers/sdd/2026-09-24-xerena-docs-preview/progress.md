@@ -114,3 +114,44 @@ created in Task 3. Task 2's Step 9 build therefore cannot succeed as written. No
 2. Alternatively amend the plan if uncontrolled-with-remount semantics are intended.
 3. For Blocker B: either move the dual-entry `vite.config.ts` to Task 3 or accept a Task 3
    dependency for the Task 2 build gate.
+
+## Task 2 resumed under amended plan — STILL BLOCKED (2026-09-25)
+
+Amendment `f82438a` applied as instructed, tests left unmodified:
+
+- `src/Preview.tsx`: added the `ModeSync` inner component verbatim (drives the switch through
+  the context `setTheme` API); nothing else changed.
+- `vite.config.ts`: removed the `mdx` entry (single `index` entry; `fileName` kept as-is).
+- `@xerena/react` untouched. `src/Preview.test.tsx` untouched (7 tests as before).
+
+### Gate tails (all with --skip-nx-cache)
+
+- `preview:test`: HANG — zero tests complete. Direct run
+  `timeout -s KILL 60 pnpm exec vitest run src/Preview.test.tsx --reporter=verbose`
+  exits 124 (killed) with only the `RUN` banner; no test finishes, including test 1 which
+  needs no interaction. Under `nx run-many`, the vitest worker instead dies with
+  `FatalProcessOutOfMemory` (`tinypool` channel closed, `ERR_IPC_CHANNEL_CLOSED`).
+- `preview:typecheck`: PASS. `preview:lint`: PASS (both with the amended code).
+- `preview:build`, Step 10, Step 11: NOT executed (test gate red; same withholding rationale
+  as before — no root script registration, no feat commit).
+
+### Root cause: amended ModeSync creates an infinite render loop
+
+Traced from `packages/react/src/primitives/Provider.tsx` (read, not guessed):
+
+1. `ModeSync` effect calls `setTheme(previewTheme(mode))`, i.e. `setStored(newObject)`.
+2. Provider re-renders; `activeTheme = {...stored, ...theme}` is a fresh object every render.
+3. `value = useMemo(..., [activeTheme])` therefore recomputes every render, producing a new
+   `setTheme` identity every render.
+4. `ModeSync` subscribes to the context, re-renders on each new `value`, and its effect deps
+   `[mode, setTheme]` change every time (`setTheme` identity) — so the effect re-fires and
+   calls `setStored(newObject)` again. Loop back to 2, unbounded: hang in isolation, worker
+   OOM under nx's parallel load.
+
+The `setTheme` identity instability is inside the published `Provider`, which this task must
+not touch — so no in-scope fix exists and none was attempted. The 7 tests were already RED-verified
+against the missing-module failure last session; they remain the correct GREEN criterion once
+the loop source is resolved by a further plan amendment.
+
+Working tree state: `packages/preview/` (12 files, amended) untracked, `pnpm-lock.yaml`
+workspace-link update modified, root `package.json` untouched. This entry committed alone.
