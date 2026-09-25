@@ -710,7 +710,7 @@ function visit(node: unknown, source: string): void {
     if (!hasCodeAttribute(element)) {
       const code = sliceChildrenSource(source, element)
       if (code !== undefined && code.length > 0) {
-        const attributes = Array.isArray(element.attributes) ? element.attributes : []
+        const attributes: MdxJsxAttribute[] = Array.isArray(element.attributes) ? element.attributes : []
         attributes.push({ type: 'mdxJsxAttribute', name: 'code', value: code })
         ;(node as Record<string, unknown>)['attributes'] = attributes
       }
