@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Provider, useTheme } from '@xerena/react'
 import { previewTheme, type PreviewMode } from './theme'
 
@@ -30,6 +30,7 @@ export interface PreviewProps {
 export function Preview({ title, description, code, defaultMode = 'light', showCode = true, children }: PreviewProps) {
   const [mode, setMode] = useState<PreviewMode>(defaultMode)
   const [open, setOpen] = useState(showCode)
+  const codeId = useId()
   const next: PreviewMode = mode === 'light' ? 'dark' : 'light'
   return (
     <section className="xr-preview" aria-label={title ?? 'Example preview'}>
@@ -44,7 +45,7 @@ export function Preview({ title, description, code, defaultMode = 'light', showC
           {mode === 'light' ? 'Dark' : 'Light'}
         </button>
         {code !== undefined && (
-          <button type="button" className="xr-preview__toggle" aria-pressed={open} onClick={() => setOpen((v) => !v)}>
+          <button type="button" className="xr-preview__toggle" aria-pressed={open} aria-controls={codeId} onClick={() => setOpen((v) => !v)}>
             {open ? 'Hide code' : 'Show code'}
           </button>
         )}
@@ -56,7 +57,7 @@ export function Preview({ title, description, code, defaultMode = 'light', showC
         </Provider>
       </div>
       {code !== undefined && open && (
-        <pre className="xr-preview__code">
+        <pre className="xr-preview__code" id={codeId}>
           <code>{code}</code>
         </pre>
       )}
