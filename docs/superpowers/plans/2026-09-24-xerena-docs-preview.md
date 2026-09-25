@@ -4,7 +4,7 @@
 
 **Goal:** Ship a public `@xerena/preview` package (live React preview surface with auto-captured source and a local light/dark toggle) and rebuild `apps/docs` on Next.js + fumadocs as a statically-exported site with 3 pilot component pages, without deploying anything.
 
-**Architecture:** `packages/preview` is a new workspace library mirroring `@xerena/react`'s build/test layout; it ships a React core entry plus an `@xerena/preview/mdx` remark-plugin entry with zero runtime dependencies. `apps/docs` is rebuilt in place (VitePress toolchain removed, legacy `.md` content archived to `content-legacy/` for the later port phase), targeting `output: 'export'` with Orama search in static mode.
+**Architecture:** `packages/preview` is a new workspace library mirroring `@xerena/react`'s build/test layout; it ships a React core entry plus an `@xerena/preview/mdx` remark-plugin entry with zero runtime dependencies. `apps/docs` is rebuilt in place (VitePress toolchain removed, legacy `.md` content archived to `content-legacy/` for the later port phase), targeting `output: 'export'` with the built-in search engine in static mode (Task 1 confirmed the engine emits a static index; it identifies as zbsearch, not Orama — static wiring unaffected).
 
 **Tech Stack:** React 19 (`^19.0.0` peer), TypeScript 5, Vite 6 lib build + `vite-plugin-dts`, vitest 3 + `@testing-library/react` 16 + jsdom, Next.js `16.3.6`, `fumadocs-core`/`fumadocs-ui` `16.15.14`, `fumadocs-mdx` `15.4.4`, Tailwind CSS `4.3.3` (docs app only), `unified`/`remark-parse`/`remark-mdx` (plugin unit tests only), pnpm 10, Nx 21, Node >= 22.
 
@@ -20,7 +20,7 @@
 - `noUncheckedIndexedAccess` is on: every indexed access handles `T | undefined`.
 - English only for code, docs, commits, and ledger. No emojis.
 - Commit identity: `git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit`. One logical change per commit, conventional messages.
-- `dist/`, `lib/`, `node_modules/` are gitignored — never commit them. (The SDD ledger under `.superpowers/` is tracked and committed deliberately; it is not ignored.)
+- `dist/`, `lib/`, `node_modules/` are gitignored — never commit them. (The SDD ledger under `.superpowers/` is committed deliberately via `git add -f`, because `.superpowers/sdd/.gitignore` contains `*`.)
 - Do NOT run `pnpm release` / `changeset publish` — publishing waits for explicit user consent.
 - Do NOT dispatch the docs deploy workflow — it is manual-only and stays undispatched.
 - Each task ends with its own review gate; record results in `.superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md`.
@@ -60,7 +60,8 @@ apps/docs/
   tsconfig.json           Next app config (jsx preserve, @/* paths)
   eslint.config.js        shared base config
   project.json            dev/build/typecheck/lint targets (build outputs out/)
-  app/layout.tsx          RootProvider with static search + global CSS imports
+  app/layout.tsx          RootProvider (from fumadocs-ui/provider/next) with static search + global CSS imports
+  app/docs/layout.tsx     DocsLayout wrapper (required: DocsPage fails prerender without it)
   app/global.css          tailwind import, fumadocs css, token mapping
   app/page.tsx            minimal landing linking to /docs
   app/docs/[[...slug]]/page.tsx   docs route with generateStaticParams
@@ -147,7 +148,7 @@ Expected: `/tmp/opencode/docs-spike` no longer exists; `git status --short` in t
 - [ ] **Step 7: Commit**
 
 ```bash
-cd /home/ubuntu/xerena-ui && git add .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "chore(docs): stack verification notes for fumadocs static export"
+cd /home/ubuntu/xerena-ui && git add .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "chore(docs): stack verification notes for fumadocs static export"
 ```
 
 ---
@@ -519,7 +520,7 @@ Verify with `node -e "console.log(require('./package.json').scripts.test)"` that
 - [ ] **Step 11: Commit**
 
 ```bash
-cd /home/ubuntu/xerena-ui && git add packages/preview package.json pnpm-lock.yaml .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "feat(preview): public @xerena/preview package with live Preview surface"
+cd /home/ubuntu/xerena-ui && git add packages/preview package.json pnpm-lock.yaml .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "feat(preview): public @xerena/preview package with live Preview surface"
 ```
 
 ---
@@ -718,7 +719,7 @@ Expected: all green, `dist/mdx.js`, `dist/mdx.cjs`, `dist/mdx.d.ts` exist.
 - [ ] **Step 6: Commit**
 
 ```bash
-cd /home/ubuntu/xerena-ui && git add packages/preview pnpm-lock.yaml .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "feat(preview): MDX source-capture plugin with explicit-code escape hatch"
+cd /home/ubuntu/xerena-ui && git add packages/preview pnpm-lock.yaml .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "feat(preview): MDX source-capture plugin with explicit-code escape hatch"
 ```
 
 Record in the ledger: the plugin lives at `src/mdx.ts` (the spec's file map says `src/mdx-entry.ts` — the shorter name won because the export map already namespaces it as `@xerena/preview/mdx`).
@@ -730,7 +731,7 @@ Record in the ledger: the plugin lives at `src/mdx.ts` (the spec's file map says
 This task replaces the VitePress toolchain in `apps/docs`. Legacy `.md` content is archived to `content-legacy/` (outside the fumadocs collections dir, so the compiler never sees it) and stays there as port source for the later scale phase. `public/mark.svg` stays in place. Use the exact versions locked in Task 1; if Task 1 recorded different versions, those win and the ledger must say so.
 
 **Files:**
-- Create: `apps/docs/next.config.mjs`, `apps/docs/source.config.ts`, `apps/docs/postcss.config.mjs`, `apps/docs/tsconfig.json`, `apps/docs/eslint.config.js`, `apps/docs/app/layout.tsx`, `apps/docs/app/global.css`, `apps/docs/app/page.tsx`, `apps/docs/app/docs/[[...slug]]/page.tsx`, `apps/docs/app/api/search/route.ts`, `apps/docs/lib/source.ts`, `apps/docs/mdx-components.tsx`, `apps/docs/content/docs/meta.json`, `apps/docs/content/docs/index.mdx`
+- Create: `apps/docs/next.config.mjs`, `apps/docs/source.config.ts`, `apps/docs/postcss.config.mjs`, `apps/docs/tsconfig.json`, `apps/docs/eslint.config.js`, `apps/docs/app/layout.tsx`, `apps/docs/app/global.css`, `apps/docs/app/page.tsx`, `apps/docs/app/docs/layout.tsx`, `apps/docs/app/docs/[[...slug]]/page.tsx`, `apps/docs/app/api/search/route.ts`, `apps/docs/lib/source.ts`, `apps/docs/mdx-components.tsx`, `apps/docs/content/docs/meta.json`, `apps/docs/content/docs/index.mdx`
 - Modify: `apps/docs/package.json`, `apps/docs/project.json`, root `.gitignore`
 - Move: `apps/docs/guide/**` + `apps/docs/brand.md` + `apps/docs/index.md` → `apps/docs/content-legacy/` (git mv, history preserved)
 - Keep: `apps/docs/.vitepress/` untouched in this task. It is deleted in Task 5 Step 6, only after the pilot `docs:build` gate passes (spec Acceptance: VitePress sources are removed only once the replacement is proven).
@@ -742,7 +743,9 @@ This task replaces the VitePress toolchain in `apps/docs`. Legacy `.md` content 
 - [ ] **Step 1: Install the docs dependencies**
 
 ```bash
-cd /home/ubuntu/xerena-ui/apps/docs && pnpm add next@16.3.6 react@19.3.0 react-dom@19.3.0 fumadocs-core@16.15.14 fumadocs-ui@16.15.14 fumadocs-mdx@15.4.4 tailwindcss@4.3.3 @tailwindcss/postcss@^4 @xerena/react@workspace:* @xerena/preview@workspace:* && pnpm add -D typescript@^5.6.0 @types/react @types/react-dom @types/mdx eslint@^9 @xerena/eslint-config@workspace:*
+cd /home/ubuntu/xerena-ui/apps/docs && pnpm add next@16.3.6 react@19.3.0 react-dom@19.3.0 fumadocs-core@16.15.14 fumadocs-ui@16.15.14 fumadocs-mdx@15.4.4 tailwindcss@4.3.3 @tailwindcss/postcss@^4 @xerena/react@workspace:* @xerena/preview@workspace:* && pnpm add -D typescript@^5.6.0 @types/react @types/react-dom @types/mdx @types/node@26.6.2 eslint@^9 @xerena/eslint-config@workspace:*
+
+(`@types/node@26.6.2` is pinned because Next auto-adds it on first build — Task 1 locked this version; pinning avoids a lockfile surprise.)
 
 (`@xerena/tokens` is deliberately absent: nothing in the docs app imports it directly — token values arrive at runtime through `@xerena/react/styles.css`, which the layout loads. See the comment at the top of `@xerena/preview`'s `styles.css`.)
 ```
@@ -836,10 +839,10 @@ export const source = loader({
 
 If Task 1 recorded the macro-based loader shape, use that instead and note it.
 
-`app/layout.tsx`:
+`app/layout.tsx` (Task 1 verified `fumadocs-ui/root-provider` does NOT exist in 16.15.14 — use the `/provider/next` subpath):
 ```tsx
 import type { ReactNode } from 'react'
-import { RootProvider } from 'fumadocs-ui/root-provider'
+import { RootProvider } from 'fumadocs-ui/provider/next'
 import '@xerena/react/styles.css'
 import '@xerena/preview/styles.css'
 import './global.css'
@@ -921,6 +924,17 @@ export const { staticGET: GET } = createFromSource(source)
 
 `content/docs/index.mdx` is a one-paragraph placeholder welcome page (real landing content ships with the port phase).
 
+`app/docs/layout.tsx` (required — Task 1 proved `DocsPage` fails prerender with `Please use <DocsPage /> under <DocsLayout />` without it):
+```tsx
+import type { ReactNode } from 'react'
+import { DocsLayout } from 'fumadocs-ui/layouts/docs'
+import { source } from '@/lib/source'
+
+export default function DocsLayoutWrapper({ children }: { children: ReactNode }) {
+  return <DocsLayout tree={source.pageTree}>{children}</DocsLayout>
+}
+```
+
 - [ ] **Step 6: Archive legacy content (keep VitePress toolchain for now)**
 
 ```bash
@@ -950,7 +964,7 @@ Plain `pnpm install` (not `--frozen-lockfile`) because the rewritten dependencie
 - [ ] **Step 8: Commit**
 
 ```bash
-cd /home/ubuntu/xerena-ui && git add apps/docs package.json pnpm-lock.yaml .gitignore .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "feat(docs): rebuild docs app on Next.js + fumadocs with static export"
+cd /home/ubuntu/xerena-ui && git add apps/docs package.json pnpm-lock.yaml .gitignore .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "feat(docs): rebuild docs app on Next.js + fumadocs with static export"
 ```
 
 ---
@@ -1031,7 +1045,7 @@ Expected: exit 0, all new routes present under `apps/docs/out/`, no `__spike` re
 - [ ] **Step 5: Commit**
 
 ```bash
-cd /home/ubuntu/xerena-ui && git add apps/docs/content .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "docs: port guides and Button/Select/Dialog pilots with live previews"
+cd /home/ubuntu/xerena-ui && git add apps/docs/content .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "docs: port guides and Button/Select/Dialog pilots with live previews"
 ```
 
 - [ ] **Step 6: Delete the VitePress toolchain (only after the Step 4 gate passed)**
@@ -1105,7 +1119,7 @@ Note for the ledger (not the workflow): the repository's Pages settings must poi
 - [ ] **Step 2: Validate and commit**
 
 ```bash
-cd /home/ubuntu/xerena-ui && npx -y actionlint .github/workflows/docs.yml && git add .github/workflows/docs.yml .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "ci(docs): manual GitHub Pages deploy workflow for the static docs site"
+cd /home/ubuntu/xerena-ui && npx -y actionlint .github/workflows/docs.yml && git add .github/workflows/docs.yml .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "ci(docs): manual GitHub Pages deploy workflow for the static docs site"
 ```
 
 Expected: actionlint exits 0. Do not dispatch the workflow.
@@ -1154,7 +1168,7 @@ Expected: `pack smoke OK`. This does not install `@xerena/react` (a peer) — th
 - [ ] **Step 4: Commit**
 
 ```bash
-cd /home/ubuntu/xerena-ui && git add .changeset/preview-minor.md .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "chore: changeset for @xerena/preview 0.1.0 release"
+cd /home/ubuntu/xerena-ui && git add .changeset/preview-minor.md .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "chore: changeset for @xerena/preview 0.1.0 release"
 ```
 
 ---
