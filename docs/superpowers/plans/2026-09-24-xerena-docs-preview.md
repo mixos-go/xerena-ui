@@ -1314,7 +1314,7 @@ This step exists because the spec requires VitePress sources to be removed only 
 
 **Files:**
 - Create: `.github/workflows/docs.yml`
-- Test: `npx -y actionlint .github/workflows/docs.yml` (validates the workflow file parses and its actions exist)
+- Test: actionlint on `.github/workflows/docs.yml` (validates the workflow file parses and its actions exist). Use the official upstream binary (rhysd/actionlint release for linux/amd64, run from /tmp — do NOT commit it): the npm `actionlint` package ships no `bin` entry, so the bare `npx -y actionlint` command fails with `could not determine executable to run`.
 
 **Interfaces:**
 - Consumes: Task 4 (`docs:build` emitting `apps/docs/out/`)
@@ -1371,10 +1371,10 @@ Note for the ledger (not the workflow): the repository's Pages settings must poi
 - [ ] **Step 2: Validate and commit**
 
 ```bash
-cd /home/ubuntu/xerena-ui && npx -y actionlint .github/workflows/docs.yml && git add .github/workflows/docs.yml .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "ci(docs): manual GitHub Pages deploy workflow for the static docs site"
+cd /home/ubuntu/xerena-ui && /tmp/opencode/actionlint-bin/actionlint .github/workflows/docs.yml && git add .github/workflows/docs.yml .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "ci(docs): manual GitHub Pages deploy workflow for the static docs site"
 ```
 
-Expected: actionlint exits 0. Do not dispatch the workflow.
+Expected: actionlint exits 0. If `/tmp/opencode/actionlint-bin/actionlint` does not exist, download rhysd/actionlint v1.7.12 linux/amd64 there first (outside the repo). Do not dispatch the workflow.
 
 ---
 
