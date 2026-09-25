@@ -413,20 +413,28 @@ export function previewTheme(mode: PreviewMode): XTheme {
 
 - [ ] **Step 6: Write `src/Preview.tsx`**
 
-`@xerena/react`'s `Provider` snapshots its `theme` prop into internal state and drops controlled updates that change `mode` (`Provider.tsx:15-16`), so passing a new `theme={{ mode }}` on toggle does nothing. Do NOT change the published package. Instead drive the switch through the context's public `setTheme` API from an inner component — this preserves the example's interactive state across toggles (no remount):
+`@xerena/react`'s `Provider` snapshots its `theme` prop into internal state and drops controlled updates that change `mode` (`Provider.tsx:15-16`), so passing a new `theme={{ mode }}` on toggle does nothing. Do NOT change the published package. Instead drive the switch through the context's public `setTheme` API from an inner component — this preserves the example's interactive state across toggles (no remount).
+
+Critical subtlety (found the hard way — a naive version hangs the suite): `Provider` rebuilds its context value every render, so the `setTheme` identity changes on every render. Calling it unconditionally from an effect retriggers the effect forever. Guard on `theme.mode !== mode` and call through a ref so the effect depends only on stable values:
 
 ```tsx
 'use client'
 
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Provider, useTheme } from '@xerena/react'
 import { previewTheme, type PreviewMode } from './theme'
 
 function ModeSync({ mode }: { mode: PreviewMode }) {
-  const { setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
+  const setThemeRef = useRef(setTheme)
+  setThemeRef.current = setTheme
   useEffect(() => {
-    setTheme(previewTheme(mode))
-  }, [mode, setTheme])
+    // Guarded: Provider mints a new setTheme identity per render, so an
+    // unconditional call loops forever. Only sync when modes actually differ.
+    if (theme.mode !== mode) {
+      setThemeRef.current(previewTheme(mode))
+    }
+  }, [mode, theme.mode])
   return null
 }
 
