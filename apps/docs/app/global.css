@@ -1,0 +1,50 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+/*
+ * Xerena token mapping: fumadocs theme variables -> --xr-semantic-color-* values.
+ * Light values reference the live --xr-* variables (defined by
+ * @xerena/react/styles.css, loaded in app/layout.tsx), so the docs shell
+ * follows the design-system palette. Dark values are literals because the
+ * --xr-* dark palette is scoped to [data-xerena-theme='dark'], which the
+ * docs shell never sets — fumadocs dark mode uses the .dark class instead.
+ * Source hexes verified in packages/tokens/dist/tokens.css.
+ */
+:root {
+  --color-fd-background: var(--xr-semantic-color-background);
+  --color-fd-foreground: var(--xr-semantic-color-text);
+  --color-fd-muted: var(--xr-semantic-color-surface);
+  --color-fd-muted-foreground: var(--xr-semantic-color-textMuted);
+  --color-fd-card: var(--xr-semantic-color-surface);
+  --color-fd-card-foreground: var(--xr-semantic-color-text);
+  --color-fd-popover: var(--xr-semantic-color-background);
+  --color-fd-popover-foreground: var(--xr-semantic-color-text);
+  --color-fd-border: var(--xr-semantic-color-border);
+  --color-fd-primary: var(--xr-semantic-color-primary);
+  --color-fd-primary-foreground: var(--xr-semantic-color-textOnStrong);
+  --color-fd-secondary: var(--xr-semantic-color-surface);
+  --color-fd-secondary-foreground: var(--xr-semantic-color-text);
+  --color-fd-accent: var(--xr-semantic-color-surfaceHover);
+  --color-fd-accent-foreground: var(--xr-semantic-color-text);
+  --color-fd-ring: var(--xr-semantic-color-borderStrong);
+}
+
+.dark {
+  --color-fd-background: #1b1712;
+  --color-fd-foreground: #f0ece3;
+  --color-fd-muted: #262019;
+  --color-fd-muted-foreground: #9a9184;
+  --color-fd-card: #262019;
+  --color-fd-card-foreground: #f0ece3;
+  --color-fd-popover: #1b1712;
+  --color-fd-popover-foreground: #f0ece3;
+  --color-fd-border: #262019;
+  --color-fd-primary: #da854f;
+  --color-fd-primary-foreground: #f0ece3;
+  --color-fd-secondary: #262019;
+  --color-fd-secondary-foreground: #f0ece3;
+  --color-fd-accent: #aca496;
+  --color-fd-accent-foreground: #f0ece3;
+  --color-fd-ring: #9a9184;
+}

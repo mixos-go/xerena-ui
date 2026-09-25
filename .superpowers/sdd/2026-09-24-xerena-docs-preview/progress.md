@@ -203,3 +203,116 @@ MDX source-capture plugin (`previewCodePlugin`) with explicit-code escape hatch.
   (`no-unused-vars`) passes. No other change versus the specified source.
 
 Committed per Step 6 as `feat(preview): MDX source-capture plugin with explicit-code escape hatch`.
+
+## Task 4 completed — PASS (2026-09-25)
+
+Docs scaffold: Next.js 16 + fumadocs static export. All 8 steps executed in order.
+
+### Step 1: deps (exact, verified)
+
+Installed per plan; `apps/docs/package.json` now lists
+`next@16.3.6 react@19.3.0 react-dom@19.3.0 fumadocs-core@16.15.14
+fumadocs-ui@16.15.14 fumadocs-mdx@15.4.4 tailwindcss@4.3.3
+@tailwindcss/postcss@^4 @xerena/react@workspace:* @xerena/preview@workspace:*`
+plus dev `typescript@^5.6.0 @types/react @types/react-dom @types/mdx
+@types/node@26.6.2 eslint@^9 @xerena/eslint-config@workspace:*`.
+`@xerena/tokens` deliberately absent (token values arrive at runtime via
+`@xerena/react/styles.css`). `@types/node` pinned at 26.6.2 per Task 1.
+Peer warnings (harmless, recorded): `fumadocs-mdx` wants vite `7.x || 8.x`
+but the repo root resolves vite 5.4.21; legacy `vitepress` wants react
+`<19` while the app now uses react 19.3.0 (vitepress toolchain dies in
+Task 5 Step 6).
+
+### Steps 2-5: files written
+
+- `next.config.mjs`: verbatim (`output: 'export'`, `basePath: '/xerena-ui'`,
+  `trailingSlash: true`, `withMDX` wrapper).
+- `source.config.ts`: verbatim (`defineDocs`/`defineConfig` from
+  `fumadocs-mdx/config`, `previewCodePlugin` in `mdxOptions.remarkPlugins`).
+  No Task 1 deviation needed: the `fumadocs-mdx/config` shape is present in
+  the installed version.
+- `postcss.config.mjs`: verbatim. `tsconfig.json`: verbatim (`jsx: preserve`).
+- `lib/source.ts`, `app/layout.tsx` (`fumadocs-ui/provider/next`
+  RootProvider per Task 1 deviation 1), `mdx-components.tsx` (Preview
+  registered), `app/docs/layout.tsx` (DocsLayout per deviation 2),
+  `app/docs/[[...slug]]/page.tsx`, `app/api/search/route.ts`: all verbatim.
+- Specified-shape files the plan leaves to the executor (recorded here):
+  `eslint.config.js` is the shared-base shape (`import base from
+  '@xerena/eslint-config'`, spread) plus an ignores block — see deviation 1
+  below. `project.json` keeps name `docs`, dev `next dev`, build
+  `next build` with outputs `{projectRoot}/out`, typecheck
+  `tsc -p tsconfig.json --noEmit`, lint `eslint .`.
+  `app/page.tsx` is a minimal landing (`Xerena UI` heading plus
+  `<Link href="/docs">Read the docs</Link>`; basePath applied automatically).
+  `content/docs/meta.json` is `{"title": "Documentation", "pages": ["index"]}`.
+  `content/docs/index.mdx` is a one-paragraph placeholder with
+  `title: Welcome` / `description: Xerena UI documentation` frontmatter.
+
+### Token variable table (app/global.css)
+
+fumadocs theme variables live in `fumadocs-ui/css/lib/default-colors.css`
+as Tailwind v4 `@theme` tokens (`--color-fd-*`). Overrides are explicit
+`:root` rules after the tailwind/neutral/preset imports (unlayered rules win
+over the layered `@theme` emission). Light values reference the live
+`--xr-*` variables from `@xerena/react/styles.css`; `.dark` values are
+literals because the `--xr-*` dark palette is scoped to
+`[data-xerena-theme='dark']`, which the docs shell never sets (fumadocs dark
+mode uses `.dark`). Hexes verified in `packages/tokens/dist/tokens.css`.
+
+| fumadocs var | xr var | light | dark |
+|---|---|---|---|
+| --color-fd-background | --xr-semantic-color-background | #faf7f2 | #1b1712 |
+| --color-fd-foreground | --xr-semantic-color-text | #2b2620 | #f0ece3 |
+| --color-fd-muted | --xr-semantic-color-surface | #f4efe6 | #262019 |
+| --color-fd-muted-foreground | --xr-semantic-color-textMuted | #9a8f7e | #9a9184 |
+| --color-fd-card | --xr-semantic-color-surface | #f4efe6 | #262019 |
+| --color-fd-card-foreground | --xr-semantic-color-text | #2b2620 | #f0ece3 |
+| --color-fd-popover | --xr-semantic-color-background | #faf7f2 | #1b1712 |
+| --color-fd-popover-foreground | --xr-semantic-color-text | #2b2620 | #f0ece3 |
+| --color-fd-border | --xr-semantic-color-border | #f4efe6 | #262019 |
+| --color-fd-primary | --xr-semantic-color-primary | #c04e1d | #da854f |
+| --color-fd-primary-foreground | --xr-semantic-color-textOnStrong | #faf7f2 | #f0ece3 |
+| --color-fd-secondary | --xr-semantic-color-surface | #f4efe6 | #262019 |
+| --color-fd-secondary-foreground | --xr-semantic-color-text | #2b2620 | #f0ece3 |
+| --color-fd-accent | --xr-semantic-color-surfaceHover | #fdf1e9 | #aca496 |
+| --color-fd-accent-foreground | --xr-semantic-color-text | #2b2620 | #f0ece3 |
+| --color-fd-ring | --xr-semantic-color-borderStrong | #9a8f7e | #9a9184 |
+
+### Step 6: archive
+
+`guide/` + `brand.md` + `index.md` moved via `git mv` to `content-legacy/`
+(history preserved). `content/docs/` holds only `index.mdx` + `meta.json`.
+`.vitepress/` untouched (dies in Task 5 Step 6).
+
+### Step 7: gates (all with --skip-nx-cache)
+
+- Plain `pnpm install`: lockfile up to date path, 22 packages linked.
+- `nx run docs:build`: green. Routes: `/`, `/_not-found`, `/api/search`,
+  `/docs` (SSG via `generateStaticParams`).
+- `apps/docs/out/index.html` exists.
+- `apps/docs/out/api/search` exists (extensionless file, payload opens with
+  `{"type":"advanced",...}` — zbsearch, as Task 1 noted; the exact recorded
+  path asserted, no `*search*.json` guess).
+- `nx run docs:typecheck`: clean (with the committed `jsx: preserve`
+  tsconfig).
+- `nx run docs:lint`: clean after deviation 1 (before: 16252 errors, all in
+  generated/legacy dirs, zero in hand-written source).
+- Root `package.json`: `lint` and `typecheck` gained `docs`; `test`
+  unchanged (docs has no unit tests).
+
+### Deviations (2, both minimal and recorded)
+
+1. `apps/docs/eslint.config.js` adds an ignores block
+   (`.next/**`, `.source/**`, `out/**`, `.vitepress/**`, `next-env.d.ts`)
+   on top of the shared-base shape. Without it `eslint .` lints Next/fumadocs
+   build output and the legacy `.vitepress/dist` bundle (16252 errors, all in
+   those dirs). The shared base only ignores `dist/**`, `lib/**`,
+   `node_modules/**`, `coverage/**`, `storybook-static/**`, which does not
+   cover Next.js outputs. The specified `eslint .` command is unchanged.
+2. `apps/docs/tsconfig.json` is committed with the specified `jsx: preserve`
+   content although every `next build` rewrites it in the working tree to
+   `jsx: react-jsx` plus `lib`/`allowJs`/`noEmit`/`incremental` (Task 1 notes
+   predicted this; committing `preserve` is the blessed behavior — Next
+   re-adjusts automatically and the build gate passed).
+
+Committed per Step 8 as `feat(docs): rebuild docs app on Next.js + fumadocs with static export`.

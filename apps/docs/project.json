@@ -5,12 +5,20 @@
   "targets": {
     "dev": {
       "executor": "nx:run-commands",
-      "options": { "command": "pnpm dev", "cwd": "apps/docs" }
+      "options": { "command": "next dev", "cwd": "apps/docs" }
     },
     "build": {
       "executor": "nx:run-commands",
-      "options": { "command": "pnpm build", "cwd": "apps/docs" },
-      "outputs": ["{projectRoot}/.vitepress/dist"]
+      "options": { "command": "next build", "cwd": "apps/docs" },
+      "outputs": ["{projectRoot}/out"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc -p tsconfig.json --noEmit", "cwd": "apps/docs" }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint .", "cwd": "apps/docs" }
     }
   }
 }
