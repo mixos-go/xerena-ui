@@ -1,4 +1,4 @@
 {
   "title": "Feedback",
-  "pages": ["dialog"]
+  "pages": ["dialog", "spinner", "progress", "message", "tooltip", "toast", "drawer", "popover"]
 }
