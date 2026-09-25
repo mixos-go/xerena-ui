@@ -36,7 +36,7 @@ packages/preview/
   package.json            name @xerena/preview, version 0.0.0, exports ., ./mdx, ./styles.css
   project.json            nx targets: build, test (dependsOn ^build), typecheck, lint
   tsconfig.json           extends tools/tsconfig/tsconfig.react.json
-  vite.config.ts          lib entries index + mdx, dts rollupTypes, cssCodeSplit false
+  vite.config.ts          lib entry index in Task 2 (+ mdx in Task 3), dts rollupTypes, cssCodeSplit false
   vitest.setup.ts         jest-dom matchers only
   eslint.config.js        @xerena/eslint-config + boundary rules (native, react-native, tailwindcss)
   scripts/copy-css.mjs    copies src/styles.css → dist/styles.css
@@ -161,7 +161,7 @@ cd /home/ubuntu/xerena-ui && git add .superpowers/sdd/2026-09-24-xerena-docs-pre
 
 **Interfaces:**
 - Consumes: `@xerena/react` `Provider` + `XTheme` (`{ mode: 'light' | 'dark'; semantic?: Partial<Record<SemanticAlias, string>> }`); `Provider` renders children inside `<div data-xerena-theme={mode}>` — tests assert against that attribute
-- Produces for Task 3: nothing (independent); for Task 4: `Preview` + `PreviewProps` from `@xerena/preview`, `styles.css` path `@xerena/preview/styles.css`
+- Produces for Task 3: `vite.config.ts` shell (Task 3 adds the `mdx` entry), `project.json`, package exports map; for Task 4: `Preview` + `PreviewProps` from `@xerena/preview`, `styles.css` path `@xerena/preview/styles.css`
 - Produces for Task 5: the exact authoring contract (props table in the spec)
 
 - [ ] **Step 1: Write `package.json`**
@@ -248,7 +248,7 @@ The `test` target — and only the `test` target — gets `"dependsOn": ["^build
 }
 ```
 
-`vite.config.ts`:
+`vite.config.ts` (single `index` entry only — the `mdx` entry is added by Task 3 together with `src/mdx.ts`, so every task's build gate is reachable):
 ```ts
 import { resolve } from 'node:path'
 import { defineConfig } from 'vitest/config'
@@ -260,7 +260,6 @@ export default defineConfig({
     lib: {
       entry: {
         index: resolve(import.meta.dirname, 'src/index.ts'),
-        mdx: resolve(import.meta.dirname, 'src/mdx.ts'),
       },
       name: 'XerenaPreview',
       formats: ['es', 'cjs'],
@@ -414,12 +413,22 @@ export function previewTheme(mode: PreviewMode): XTheme {
 
 - [ ] **Step 6: Write `src/Preview.tsx`**
 
+`@xerena/react`'s `Provider` snapshots its `theme` prop into internal state and drops controlled updates that change `mode` (`Provider.tsx:15-16`), so passing a new `theme={{ mode }}` on toggle does nothing. Do NOT change the published package. Instead drive the switch through the context's public `setTheme` API from an inner component — this preserves the example's interactive state across toggles (no remount):
+
 ```tsx
 'use client'
 
-import { useState, type ReactNode } from 'react'
-import { Provider } from '@xerena/react'
+import { useEffect, useState, type ReactNode } from 'react'
+import { Provider, useTheme } from '@xerena/react'
 import { previewTheme, type PreviewMode } from './theme'
+
+function ModeSync({ mode }: { mode: PreviewMode }) {
+  const { setTheme } = useTheme()
+  useEffect(() => {
+    setTheme(previewTheme(mode))
+  }, [mode, setTheme])
+  return null
+}
 
 export interface PreviewProps {
   title?: string
@@ -453,7 +462,10 @@ export function Preview({ title, description, code, defaultMode = 'light', showC
         )}
       </div>
       <div className="xr-preview__surface">
-        <Provider theme={previewTheme(mode)}>{children}</Provider>
+        <Provider theme={previewTheme(mode)}>
+          <ModeSync mode={mode} />
+          {children}
+        </Provider>
       </div>
       {code !== undefined && open && (
         <pre className="xr-preview__code">
@@ -503,7 +515,7 @@ Plain `pnpm install` (not `--frozen-lockfile`) because the new workspace package
 cd /home/ubuntu/xerena-ui && pnpm exec nx run preview:build --skip-nx-cache
 ```
 
-Expected: `dist/index.js`, `dist/index.cjs`, `dist/index.d.ts`, `dist/styles.css` exist.
+Expected: `dist/index.js`, `dist/index.cjs`, `dist/index.d.ts`, `dist/styles.css` exist. (`dist/mdx.*` do NOT exist yet — the `mdx` entry ships with Task 3.)
 
 - [ ] **Step 10: Register the package in the root scripts**
 
@@ -533,7 +545,7 @@ cd /home/ubuntu/xerena-ui && git add packages/preview package.json pnpm-lock.yam
 - Test: `packages/preview/src/mdx.test.ts`
 
 **Interfaces:**
-- Consumes: nothing from Task 2 (independent file). Test harness: `unified@11.0.5` + `remark-parse@11.0.0` + `remark-mdx@3.1.1` as devDependencies
+- Consumes: Task 2's `vite.config.ts` (this task adds the `mdx` lib entry to it) and `project.json` (unchanged). Test harness: `unified@11.0.5` + `remark-parse@11.0.0` + `remark-mdx@3.1.1` as devDependencies
 - Produces for Task 4: `previewCodePlugin` factory, importable as `@xerena/preview/mdx`, registered via fumadocs-mdx `mdxOptions.remarkPlugins`. Behaviour contract: `<Preview>` flow elements (`mdxJsxFlowElement`) without an explicit `code` attribute gain one containing the exact authored children source; everything else is byte-identical. Known limitation (by design): inline `<Preview>` inside a paragraph (`mdxJsxTextElement`) is not handled — previews are block-level only; document this in the ledger.
 
 - [ ] **Step 1: Add the test-only parser dependencies**
@@ -708,13 +720,24 @@ export function previewCodePlugin() {
 }
 ```
 
-- [ ] **Step 5: Run tests, typecheck, lint, build**
+- [ ] **Step 5: Add the `mdx` lib entry, then run tests, typecheck, lint, build**
+
+Edit `packages/preview/vite.config.ts` — change the lib entry object from `{ index: ... }` to:
+
+```ts
+entry: {
+  index: resolve(import.meta.dirname, 'src/index.ts'),
+  mdx: resolve(import.meta.dirname, 'src/mdx.ts'),
+},
+```
+
+(The `fileName` function from Task 2 already handles the `mdx` entry name — no other config change needed.)
 
 ```bash
 cd /home/ubuntu/xerena-ui && pnpm exec nx run-many -t test typecheck lint build --projects=preview --skip-nx-cache
 ```
 
-Expected: all green, `dist/mdx.js`, `dist/mdx.cjs`, `dist/mdx.d.ts` exist.
+Expected: all green, `dist/mdx.js`, `dist/mdx.cjs`, `dist/mdx.d.ts` exist alongside the index outputs.
 
 - [ ] **Step 6: Commit**
 
