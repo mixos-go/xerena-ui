@@ -1072,6 +1072,115 @@ This commit changes a published package's build output and MUST be reviewer-appr
 
 ---
 
+### Task 4c: Make `@xerena/react` overlays SSR-safe (found by Task 5 probe)
+
+Root cause (verified, not guessed): React 19.3.0's `react-dom` throws at module-evaluation time when `React.version` is not exactly `19.3.0` (`react-dom-client` IIFE: `if ("19.3.0" !== React.version) throw …version-mismatch`). Next 16's SSR graph resolves `react` to its vendored canary (`19.3.0-canary-cbb046ab-20260731`, confirmed in `next/dist/compiled/react`), so any server-side evaluation of workspace `react-dom` explodes. `packages/react/dist/index.js` is single-file: importing ANY export evaluates the top-level `react-dom` imports in `Toast.tsx` (`createRoot` from `react-dom/client`) and `OverlayPrimitive.tsx` (`createPortal` from `react-dom`). `transpilePackages` was tried and does not help — the poisoning is module evaluation, not transpilation.
+
+Fix principle: portals and roots are inherently client-only (they need `document`), so their `react-dom` imports must be lazy — never evaluated during SSR. On the client the dynamic imports resolve workspace `react-dom` next to workspace `react`: a consistent pair. Rejected alternatives (recorded, do not retry): pinning workspace React to Next's canary (fragile, fights semver, poisons the monorepo); Next config alias hacks (fights the framework, risks Next internals); splitting dist into chunks (does not help `Dialog` itself, which genuinely needs portals).
+
+**Files:**
+- Modify: `packages/react/src/components/feedback/Toast.tsx`, `packages/react/src/primitives/OverlayPrimitive.tsx`, plus their tests if timing changes require it
+- Test: existing `react` suite (toast/overlay tests updated to async where needed) + `docs:build` against the fresh dist
+
+**Interfaces:**
+- Consumes: Task 4b's externals (dynamic `import('react-dom')` / `import('react-dom/client')` stay external bare imports at runtime — Rollup preserves them; verify in dist)
+- Produces for Task 5 resume: a `dist/index.js` with zero top-level `react-dom` imports (verified by grep, not by assumption)
+
+- [ ] **Step 1: Lazy-load `createRoot` in `Toast.tsx`**
+
+Replace the top-level value import with a type-only import (erased at compile, SSR-safe) and load the module inside the already client-only `flush()` path:
+
+```ts
+import { useEffect } from 'react'
+import type { CSSProperties } from 'react'
+import type { Root } from 'react-dom/client'
+```
+
+```ts
+let root: Root | null = null
+
+async function ensureRoot(): Promise<Root> {
+  if (!root) {
+    const { createRoot } = await import('react-dom/client')
+    const div = document.createElement('div')
+    div.id = 'xerena-toast-stack'
+    document.body.appendChild(div)
+    root = createRoot(div)
+  }
+  return root
+}
+
+function flush() {
+  void ensureRoot().then((r) =>
+    r.render(
+      <div data-xerena-theme={mode} style={...}>
+        ...
+      </div>,
+    ),
+  )
+}
+```
+
+Keep the `Toast` component, `TOAST_STACK`, `setToastThemeMode`, and `toast()` shapes identical; only the root acquisition goes async (fire-and-forget — callers already treat `toast()` as sync-void).
+
+- [ ] **Step 2: Lazy-load `createPortal` in `OverlayPrimitive.tsx`**
+
+```tsx
+import { useEffect, useMemo, useState } from 'react'
+import type { ReactNode, ReactPortal } from 'react'
+import { useDismissable, useFocusTrap } from '../hooks'
+import { useThemeMode } from './ThemeContext'
+
+type PortalFn = (children: ReactNode, container: Element) => ReactPortal
+
+export function OverlayPrimitive({ open, onClose, labeledBy, focusTrap = false, onOutside, children }: OverlayPrimitiveProps) {
+  const trapRef = useFocusTrap(open && focusTrap)
+  const dismissRef = useDismissable(open, onClose, onOutside ?? onClose)
+  const mode = useThemeMode()
+  const mergedRef = useMemo(...unchanged...)
+  const [portal, setPortal] = useState<PortalFn | null>(null)
+  useEffect(() => {
+    let live = true
+    void import('react-dom').then((m) => {
+      if (live) setPortal(() => m.createPortal)
+    })
+    return () => {
+      live = false
+    }
+  }, [])
+  if (!open || !portal) return null
+  return portal(<div ...unchanged>...</div>, document.body)
+}
+```
+
+`document.body` is only reached after `portal` is set, which only happens client-side post-mount — SSR renders `null`. First verify `useFocusTrap`/`useDismissable` touch `document` only inside effects/handlers (never during render); if either touches it during render, guard that too and record it.
+
+- [ ] **Step 3: Update affected tests and run the react gates**
+
+Existing toast/overlay tests may assert synchronous rendering — update them to await (`findBy*` / `waitFor`) where timing changed. No test may be deleted to make the gate pass; weakened assertions must be flagged in the report.
+
+```bash
+cd /home/ubuntu/xerena-ui && pnpm exec nx run react:build --skip-nx-cache && grep -nE "^import.*react-dom|^import.*from \"react-dom" packages/react/dist/index.js; echo "exit=$? (1 = no top-level react-dom import = good)" && pnpm exec nx run-many -t test typecheck lint --projects=react --skip-nx-cache
+```
+
+Expected: grep finds nothing, all gates green.
+
+- [ ] **Step 4: Prove the docs graph is clean, then commit (separate, reviewable)**
+
+```bash
+cd /home/ubuntu/xerena-ui && pnpm exec nx run docs:build --skip-nx-cache
+```
+
+Expected: build progresses PAST the old `error #527` (it may still fail later on Task 5's unfinished content — report exactly how far it gets, do not fix other failures here).
+
+```bash
+cd /home/ubuntu/xerena-ui && git add packages/react/src .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "fix(react): lazy-load react-dom for SSR-safe overlays and toasts"
+```
+
+This commit changes published component sources and MUST be reviewer-approved before Task 5 resumes.
+
+---
+
 ### Task 5: Port guides + 3 pilot component pages
 
 Ports, in order: the five guide pages (`getting-started`, `theming`, `motion`, `styling`, `native`) plus root `brand.md` — six `.mdx` files total — then Button, Select, Dialog with live previews. Source of truth for each page is its counterpart under `apps/docs/content-legacy/` (`content-legacy/guide/<name>.md`, `content-legacy/brand.md`). (`content-legacy/index.md` is archived but not ported — the new `content/docs/index.mdx` placeholder replaces it.)
