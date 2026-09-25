@@ -1412,8 +1412,10 @@ Expected: changeset status lists `@xerena/preview` as a pending minor release; `
 The docs app consumes the package via workspace link, which hides packaging mistakes (missing `files`, broken export map, forgotten CSS). Prove the published artifact installs cleanly:
 
 ```bash
-cd /home/ubuntu/xerena-ui/packages/preview && pnpm exec nx run preview:build --skip-nx-cache && npm pack --pack-destination /tmp/opencode/preview-pack && mkdir -p /tmp/opencode/preview-consumer && cd /tmp/opencode/preview-consumer && pnpm init -y >/dev/null && pnpm add /tmp/opencode/preview-pack/xerena-preview-0.0.0.tgz react@19.3.0 react-dom@19.3.0 && node -e "const p=require('./node_modules/@xerena/preview/package.json'); for (const k of ['./mdx','./styles.css']) if (!p.exports[k]) throw new Error('missing export '+k); require('fs').accessSync('./node_modules/@xerena/preview/dist/index.js'); require('fs').accessSync('./node_modules/@xerena/preview/dist/mdx.js'); require('fs').accessSync('./node_modules/@xerena/preview/dist/styles.css'); console.log('pack smoke OK')"
+mkdir -p /tmp/opencode/preview-pack && cd /home/ubuntu/xerena-ui/packages/preview && pnpm exec nx run preview:build --skip-nx-cache && npm pack --pack-destination /tmp/opencode/preview-pack && mkdir -p /tmp/opencode/preview-consumer && cd /tmp/opencode/preview-consumer && pnpm init -y >/dev/null && pnpm add /tmp/opencode/preview-pack/xerena-preview-0.0.0.tgz react@19.3.0 react-dom@19.3.0 && node -e "const p=require('./node_modules/@xerena/preview/package.json'); for (const k of ['./mdx','./styles.css']) if (!p.exports[k]) throw new Error('missing export '+k); require('fs').accessSync('./node_modules/@xerena/preview/dist/index.js'); require('fs').accessSync('./node_modules/@xerena/preview/dist/mdx.js'); require('fs').accessSync('./node_modules/@xerena/preview/dist/styles.css'); console.log('pack smoke OK')"
 ```
+
+(`mkdir -p` the pack destination first — `npm pack --pack-destination` errors with ENOENT when the dir does not exist.)
 
 Expected: `pack smoke OK`. This does not install `@xerena/react` (a peer) — the check is packaging shape only, not rendering. Afterwards `rm -rf /tmp/opencode/preview-pack /tmp/opencode/preview-consumer`.
 
