@@ -718,3 +718,6 @@ resolvable as relative imports. Note: `ButtonProps` has no `onClick`
 
 Committed per Step 5 as `docs: port guides and Button/Select/Dialog
 pilots with live previews`. Step 6 follows after the gate.
+
+## Phase close (2026-09-25)
+Final review: needs-fixes (narrow) → fixed: tsconfig churn restored + tsbuildinfo deleted; aria-controls added to Preview code toggle (7a4bf30). Preview gates green after fix. Branch clean. Phase complete — deferred: 39 pages, content-legacy removal, publish, deploy, registry.
