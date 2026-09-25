@@ -8,6 +8,7 @@ export default defineConfig({
     lib: {
       entry: {
         index: resolve(import.meta.dirname, 'src/index.ts'),
+        mdx: resolve(import.meta.dirname, 'src/mdx.ts'),
       },
       name: 'XerenaPreview',
       formats: ['es', 'cjs'],

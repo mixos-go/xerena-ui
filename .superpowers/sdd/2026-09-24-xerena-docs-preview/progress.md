@@ -175,3 +175,31 @@ Applied amendment `4279d46` (guarded `ModeSync`): reads both `theme` and `setThe
   documented above; final GREEN is 7/7 unmodified tests.
 
 Committed per Step 11 as `feat(preview): public @xerena/preview package with live Preview surface`.
+
+## Task 3 completed — PASS (2026-09-25)
+
+MDX source-capture plugin (`previewCodePlugin`) with explicit-code escape hatch.
+
+### Gate tails (all with --skip-nx-cache)
+
+- `nx run-many -t test typecheck lint build --projects=preview`: green.
+  `preview:test`: 12/12 pass (7 Preview + 5 mdx), 3.44 s.
+  `preview:typecheck`: clean. `preview:lint`: clean. `preview:build`: green.
+- `dist/` contains `mdx.js`, `mdx.cjs`, `mdx.d.ts` alongside the index outputs
+  (`index.js`, `index.cjs`, `index.d.ts`) and `styles.css`.
+- TDD record: RED (`Failed to resolve import "./mdx"`) verified before implementation;
+  final GREEN is 5/5 unmodified plugin tests.
+- `src/index.ts` untouched: the plugin stays out of the React entry and ships only
+  through the `./mdx` export map.
+
+### Notes
+
+- The plugin lives at `src/mdx.ts` (the spec file map says `src/mdx-entry.ts` — the
+  shorter name won because the export map already namespaces it as `@xerena/preview/mdx`).
+- Known limitation (by design): inline `<Preview>` inside a paragraph
+  (`mdxJsxTextElement`) is not handled — previews are block-level only.
+- Plan amendment applied during this task: the `attributes` local in `visit` is
+  annotated `MdxJsxAttribute[]`, consuming the structural interface so lint
+  (`no-unused-vars`) passes. No other change versus the specified source.
+
+Committed per Step 6 as `feat(preview): MDX source-capture plugin with explicit-code escape hatch`.
