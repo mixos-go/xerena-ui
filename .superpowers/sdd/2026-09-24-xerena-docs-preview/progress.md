@@ -56,3 +56,61 @@ The Task 5 authoring rule stands: every interactive example lives in a `'use cli
 - pnpm 12 in scratch required `allowBuilds: { esbuild: true }` in `pnpm-workspace.yaml` before installs exited 0 ( scratch-only plumbing, deleted with the scratch dir).
 
 ### Verdict: PASS — proceed to Task 2.
+
+## Task 2: packages/preview scaffold + Preview component — BLOCKED (2026-09-25)
+
+Steps 1–7 executed verbatim (all 12 Task 2 files written exactly as specified in the plan).
+Steps 8–9 gates are red for reasons outside `packages/preview`. Steps 10–11 withheld (see below).
+TDD RED verified in Step 4: `vitest run src/Preview.test.tsx` failed with
+`Failed to resolve import "./Preview"` (not command-not-found; plain `pnpm install` run first).
+All `--xr-*` variables used in `styles.css` verified present in `packages/tokens/dist/tokens.css`.
+
+### Gate tails (all with --skip-nx-cache)
+
+- `preview:test`: 5 passed / 2 failed of 7. Failures: `theme toggle is local to the preview`
+  and `works identically under prefers-reduced-motion` — both assert a mode change AFTER mount.
+- `preview:typecheck`: PASS.
+- `preview:lint`: PASS.
+- `preview:build`: FAIL — `Could not resolve entry module "src/mdx.ts"`. No `dist/` emitted.
+
+### Blocker A: @xerena/react Provider drops theme prop updates after mount
+
+`packages/react/src/primitives/Provider.tsx:15-16`:
+
+```tsx
+const [stored, setStored] = useState<XTheme>(theme)
+const activeTheme = theme.mode === stored.mode ? { ...stored, ...theme } : stored
+```
+
+When a parent switches `theme.mode` (light to dark), `stored` is never resynced and the guard
+selects the stale `stored` theme, so `<div data-xerena-theme={...}>` never flips. The plan's
+`Preview.tsx` drives `Provider` in controlled mode (`theme={previewTheme(mode)}`), which this
+`Provider` does not support. Isolated repro (render light, rerender dark, temporary test file
+since removed) fails against the freshly built `@xerena/react` dist, whose minified output
+contains the same logic (`E.mode === S.mode ? {...S, ...E} : S`). Existing `Provider.test.tsx`
+only covers initial mount, which is why this went unnoticed. The `stored` logic dates to
+`0b5b77c` (pre-plan), so the plan's assumption was incorrect from the start, not a regression.
+Fixing `Provider` is out of Task 2 scope (separate package, published `0.1.0`, needs its own
+test + review) — not attempted here.
+
+### Blocker B: vite mdx entry points at a Task 3 file
+
+The verbatim `vite.config.ts` declares lib entry `mdx: src/mdx.ts`, but `src/mdx.ts` is only
+created in Task 3. Task 2's Step 9 build therefore cannot succeed as written. Not worked around
+(stubbing `mdx.ts` would bleed Task 3 scope; editing the config would violate verbatim rule).
+
+### Withheld steps and why
+
+- Step 10 (root `package.json` scripts gain `preview`): NOT executed. Registering a red project
+  would break repo-wide `pnpm test` / `pnpm lint` / `pnpm typecheck` on this branch.
+- Step 11 (feat commit): NOT executed. Gates are red; the planned message would misrepresent.
+  This ledger entry is committed alone (Task 1 precedent). `packages/preview/` files plus the
+  `pnpm-lock.yaml` workspace-link update remain uncommitted in the working tree for inspection.
+
+### Proposed paths (require plan amendment, not executed)
+
+1. Fix `Provider` to follow controlled `theme` prop updates (own test in `packages/react`,
+   own commit), then re-run Task 2 Step 8.
+2. Alternatively amend the plan if uncontrolled-with-remount semantics are intended.
+3. For Blocker B: either move the dual-entry `vite.config.ts` to Task 3 or accept a Task 3
+   dependency for the Task 2 build gate.
