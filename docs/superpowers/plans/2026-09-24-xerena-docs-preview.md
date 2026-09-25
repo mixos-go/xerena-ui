@@ -919,6 +919,7 @@ export function getMDXComponents(components?: MDXComponents) {
 
 ```tsx
 import { source } from '@/lib/source'
+import { getMDXComponents } from '@/mdx-components'
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from 'fumadocs-ui/layouts/docs/page'
 import { notFound } from 'next/navigation'
 
@@ -932,7 +933,7 @@ export default async function Page(props: { params: Promise<{ slug?: string[] }>
       <DocsTitle>{page.data.title}</DocsTitle>
       <DocsDescription>{page.data.description}</DocsDescription>
       <DocsBody>
-        <MDX />
+        <MDX components={getMDXComponents()} />
       </DocsBody>
     </DocsPage>
   )
@@ -942,6 +943,8 @@ export function generateStaticParams() {
   return source.generateParams()
 }
 ```
+
+The `components={getMDXComponents()}` prop is load-bearing, not decoration: without it the global `Preview` registration in `mdx-components.tsx` is dead code (Next honors only `useMDXComponents`/explicit props — nothing calls `getMDXComponents` otherwise) and every `<Preview>` in MDX fails prerender with `Expected component 'Preview' to be defined`.
 
 The search route:
 
@@ -995,8 +998,65 @@ Plain `pnpm install` (not `--frozen-lockfile`) because the rewritten dependencie
 - [ ] **Step 8: Commit**
 
 ```bash
-cd /home/ubuntu/xerena-ui && git add apps/docs package.json pnpm-lock.yaml .gitignore .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "feat(docs): rebuild docs app on Next.js + fumadocs with static export"
+cd /home/ubuntu/xerena-ui && git add apps/docs package.json pnpm-lock.yaml .gitignore .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "feat(docs): rebuild docs app on Next.js + fumadocs with static export"
 ```
+
+- [ ] **Step 9 (added after Task 5 probe): Fix the MDX components wiring**
+
+Task 5's build probe proved the plan's original page sketch was incomplete: pass `components={getMDXComponents()}` (imported from `@/mdx-components`) to `<MDX />` exactly as in the amended Step 5 above, rebuild, and confirm the `Expected component 'Preview' to be defined` error is gone. Commit separately:
+
+```bash
+cd /home/ubuntu/xerena-ui && git add apps/docs/app/docs/[[...slug]]/page.tsx .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "fix(docs): wire getMDXComponents into MDX render"
+```
+
+---
+
+### Task 4b: Fix `@xerena/react` duplicate React in dist (found by Task 5 probe)
+
+Task 5's build probe proved `packages/react/dist` bundles a second copy of `react-dom`: `Toast.tsx` imports `react-dom/client`, but `vite.config.ts` `external` lists only the exact `'react-dom'`, so Rollup inlines the subpath. Under Next 16 this trips React error #527 (two Reacts). A duplicate React in a published design-system bundle is objectively wrong regardless of docs.
+
+**Files:**
+- Modify: `packages/react/vite.config.ts`, `packages/react/dist/*` (rebuilt, gitignored)
+- Test: existing `react` suite + docs build consuming the fresh dist
+
+**Interfaces:**
+- Consumes: Task 2's `dependsOn ^build` understanding (consumers resolve workspace deps to `dist`)
+- Produces for Task 5 resume: a `dist` with zero bundled React — verified by grep, not by assumption
+
+- [ ] **Step 1: Extend the externals**
+
+In `packages/react/vite.config.ts`, change:
+```ts
+external: ['react', 'react-dom', '@xerena/tokens', '@xerena/styling'],
+```
+to:
+```ts
+external: ['react', 'react-dom', 'react-dom/client', 'react/jsx-runtime', '@xerena/tokens', '@xerena/styling'],
+```
+
+- [ ] **Step 2: Rebuild and prove no bundled React**
+
+```bash
+cd /home/ubuntu/xerena-ui && pnpm exec nx run react:build --skip-nx-cache && grep -c "createRoot" packages/react/dist/index.js; grep -c "from\"react\"\|from 'react'" packages/react/dist/index.js
+```
+
+Expected: `createRoot` count drops to the re-export level (0 definitions — only the import statement remains); `react`/`react-dom` appear only as import specifiers, never inlined.
+
+- [ ] **Step 3: Run the react gates**
+
+```bash
+cd /home/ubuntu/xerena-ui && pnpm exec nx run-many -t test typecheck lint --projects=react --skip-nx-cache
+```
+
+Expected: all green (externals change build output only, not sources).
+
+- [ ] **Step 4: Commit (separate, reviewable)**
+
+```bash
+cd /home/ubuntu/xerena-ui && git add packages/react/vite.config.ts .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git add -f .superpowers/sdd/2026-09-24-xerena-docs-preview/progress.md && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "fix(react): externalize react-dom/client and jsx-runtime from bundle"
+```
+
+This commit changes a published package's build output and MUST be reviewer-approved before Task 5 resumes.
 
 ---
 
