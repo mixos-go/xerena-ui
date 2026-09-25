@@ -1074,6 +1074,8 @@ This commit changes a published package's build output and MUST be reviewer-appr
 
 ### Task 4c: Make `@xerena/react` overlays SSR-safe (found by Task 5 probe)
 
+> **OUTCOME: ABANDONED — do not execute this task.** Empirical probes proved the lazy-`react-dom` direction wrong-headed: (1) it breaks Menu focus-on-open and focus-trap timing (proven by scratch probes against the WIP — fixing that needs `Menu.tsx` surgery, a deeper published-behavior change); (2) it cannot clean the graph anyway, because `fumadocs-ui/dist` itself carries top-level static `react-dom` imports. The WIP was reverted uncommitted. The correct fix is the client-only demo boundary in Task 5 (below): keep ALL component code out of every server-evaluated module instead of restructuring the library. `packages/react` sources stay exactly as they are.
+
 Root cause (verified, not guessed): React 19.3.0's `react-dom` throws at module-evaluation time when `React.version` is not exactly `19.3.0` (`react-dom-client` IIFE: `if ("19.3.0" !== React.version) throw …version-mismatch`). Next 16's SSR graph resolves `react` to its vendored canary (`19.3.0-canary-cbb046ab-20260731`, confirmed in `next/dist/compiled/react`), so any server-side evaluation of workspace `react-dom` explodes. `packages/react/dist/index.js` is single-file: importing ANY export evaluates the top-level `react-dom` imports in `Toast.tsx` (`createRoot` from `react-dom/client`) and `OverlayPrimitive.tsx` (`createPortal` from `react-dom`). `transpilePackages` was tried and does not help — the poisoning is module evaluation, not transpilation.
 
 Fix principle: portals and roots are inherently client-only (they need `document`), so their `react-dom` imports must be lazy — never evaluated during SSR. On the client the dynamic imports resolve workspace `react-dom` next to workspace `react`: a consistent pair. Rejected alternatives (recorded, do not retry): pinning workspace React to Next's canary (fragile, fights semver, poisons the monorepo); Next config alias hacks (fights the framework, risks Next internals); splitting dist into chunks (does not help `Dialog` itself, which genuinely needs portals).
@@ -1195,11 +1197,26 @@ Ports, in order: the five guide pages (`getting-started`, `theming`, `motion`, `
 - Produces: the proven port pattern the scale phase copies (record the exact per-page recipe in the ledger)
 
 Rules for every ported page (no exceptions):
-- Interactive examples go through `<Preview title="...">…</Preview>` inside `'_*-demo.tsx'` client files (see below) with an explicit `code` prop showing the reader-facing source. The remark plugin cannot fire here — it only processes `.mdx`, not the `.tsx` demo files — so the escape hatch is the mechanism, not the fallback.
+- **Client-only demo boundary (load-bearing):** every demo is loaded exclusively on the client via `next/dynamic` with `ssr: false`. Rationale (proven by probes): Next 16 resolves `react` to its vendored canary in server-evaluated modules while `react-dom` resolves to the workspace stable copy, and stable `react-dom` throws error #527 at module evaluation when paired with a non-exact `react`. Any static import of component code — in an MDX page, a `_demo` file, `mdx-components.tsx`, or anything the search route's `.source/server` graph touches — poisons both page prerender AND search-index collection. `dynamic(ssr:false)` keeps every component module out of all server graphs; the client bundle then pairs workspace stable `react` + `react-dom` consistently.
+- `<Preview>` lives INSIDE the `'_*-demo.tsx'` files, never in MDX: each demo renders `<Preview title="..." code="...">…actual example…</Preview>`. Consequences: (a) `mdx-components.tsx` must NOT map `Preview` (remove it — keep `defaultComponents` only), so no server module imports `@xerena/preview`; (b) the remark plugin cannot fire on our pilots (it only processes `.mdx`) — the explicit `code` prop is the mechanism here, and the plugin stays unit-tested + shipped for consumers.
 - `::: tip … :::` containers become `<Callout>…</Callout>`; keep the "React Native" notes that Phase 6 added.
 - API tables are copied verbatim (MDX is a superset of Markdown).
-- Every example using `@xerena/react` components lives in a `'_*-demo.tsx'` file with `'use client'` at the top, imported by the page — no exceptions, not even for Button. Rationale: `packages/react/src` contains zero `'use client'` directives and `Button` uses `useState` (via `usePress`), so even a handler-free `<Button>` rendered inline in an RSC MDX page fails the build. MDX pages themselves stay server components and never contain component JSX directly.
-- Pilot coverage: Button = `_button-demo.tsx` (variants/sizes, no handlers needed); Select = `_select-demo.tsx` (open/select/close); Dialog = `_dialog-demo.tsx` (open/dismiss).
+- Every `'_*-demo.tsx'` file starts with `'use client'`. MDX pages stay server components and contain no component JSX — only `dynamic()` calls and prose.
+- Pilot coverage: Button = `_button-demo.tsx` (variants/sizes); Select = `_select-demo.tsx` (open/select/close); Dialog = `_dialog-demo.tsx` (open/dismiss). Each demo owns its `<Preview>` wrapper with an explicit reader-facing `code` prop.
+
+MDX pattern per demo (exact shape):
+```mdx
+import dynamic from 'next/dynamic'
+
+const ButtonDemo = dynamic(() => import('./_button-demo').then((m) => m.ButtonDemo), {
+  ssr: false,
+  loading: () => <p>Loading preview…</p>,
+})
+
+<ButtonDemo />
+```
+
+The `loading` fallback is plain server-safe JSX (no hooks, no component imports).
 
 - [ ] **Step 1: Port the five guide pages plus brand**
 
@@ -1224,15 +1241,38 @@ export function ButtonDemo() {
 }
 ```
 
-Note the explicit `code` prop: it shows the example source a reader would write, not the demo wrapper. `content/docs/components/actions/button.mdx` ports the legacy API table and prose, then renders `<ButtonDemo />` (imported from `./_button-demo`). Render-verify with `pnpm exec nx run docs:dev` at `http://localhost:3000/xerena-ui` (the dev server serves under the `basePath`) and confirm the code panel shows the exact authored source.
+Note the explicit `code` prop: it shows the example source a reader would write, not the demo wrapper. `content/docs/components/actions/button.mdx` ports the legacy API table and prose, then loads the demo client-only:
+
+```mdx
+import dynamic from 'next/dynamic'
+
+const ButtonDemo = dynamic(() => import('./_button-demo').then((m) => m.ButtonDemo), {
+  ssr: false,
+  loading: () => <p>Loading preview…</p>,
+})
+
+<ButtonDemo />
+```
+
+Render-verify with `pnpm exec nx run docs:dev` at `http://localhost:3000/xerena-ui` (the dev server serves under the `basePath`) and confirm the code panel shows the exact authored source.
 
 - [ ] **Step 3: Write the Select and Dialog pilots with client demos**
 
-`_select-demo.tsx` and `_dialog-demo.tsx` (each starting with `'use client'`), imported and rendered inside `<Preview>` blocks on their pages. Compose the exact web APIs — `Dialog` is a compound object (`Dialog.Root`, `Dialog.Content`, `Dialog.Close`, `Dialog.Title`, `Dialog.Description`, plus `Portal`/`Overlay`; see `packages/react/src/components/feedback/Dialog.tsx:36`), and `Select` is a native-`<select>` wrapper whose props extend `React.SelectHTMLAttributes<HTMLSelectElement>` with an added `error?: boolean` (see `packages/react/src/components/form/Select.tsx`). Each demo must exercise the component's core interaction (Select: open the list, pick an option, close; Dialog: open, dismiss via close control). Risk to note in the ledger: colocated `_<name>-demo.tsx` files sit inside `content/docs/` — confirm the fumadocs loader ignores non-MDX files (the `docs:build` gate in Step 5 proves it; if it does not, move the demos to `app/` and import by path).
+`_select-demo.tsx` and `_dialog-demo.tsx` (each starting with `'use client'`). Each file renders its own `<Preview title="..." code="...">` wrapper around the example (same shape as the Button demo — the page never contains `<Preview>` directly). Compose the exact web APIs — `Dialog` is a compound object (`Dialog.Root`, `Dialog.Content`, `Dialog.Close`, `Dialog.Title`, `Dialog.Description`, plus `Portal`/`Overlay`; see `packages/react/src/components/feedback/Dialog.tsx:36`), and `Select` is a native-`<select>` wrapper whose props extend `React.SelectHTMLAttributes<HTMLSelectElement>` with an added `error?: boolean` (see `packages/react/src/components/form/Select.tsx`). Each demo must exercise the component's core interaction (Select: open the list, pick an option, close; Dialog: open, dismiss via close control). Their pages load them via the `dynamic(ssr:false)` pattern. Risk to note in the ledger: colocated `_<name>-demo.tsx` files sit inside `content/docs/` — confirm the fumadocs loader ignores non-MDX files (the `docs:build` gate in Step 4 proves it; if it does not, move the demos to `app/` and import by path).
 
-- [ ] **Step 4: Prove auto-capture end to end, then update `meta.json` files and build**
+- [ ] **Step 0: Remove `Preview` from the server MDX map (prerequisite fix)**
 
-First, prove the remark plugin fires inside the real docs pipeline (its unit tests in Task 3 prove the transform; this proves the wiring). Create a temporary `content/docs/__spike.mdx` containing a server-safe inline example — plain HTML only, no `@xerena/react` imports:
+`apps/docs/mdx-components.tsx` currently imports `Preview` from `@xerena/preview`, which pulls `@xerena/react` → `react-dom` into every server-evaluated module (verified: `fumadocs-ui/mdx`'s own graph is clean — zero `react-dom` imports in its entry, components, `ui/*`, or `utils/*` — ours is the sole poison). Delete the `Preview` import and its mapping line, keeping `defaultMdxComponents` and the function shape. Commit alone:
+
+```bash
+cd /home/ubuntu/xerena-ui && git add apps/docs/mdx-components.tsx && git -c user.name="mixos-go" -c user.email="mixosg0@gmail.com" commit -m "fix(docs): drop Preview from server MDX map (client demos own it)"
+```
+
+- [ ] **Step 4: Prove the plugin fires in the real pipeline, then update `meta.json` files and build**
+
+The plugin's transform is proven by Task 3's unit tests over real parsed ASTs. What remains is proving REGISTRATION — that fumadocs-mdx actually runs `previewCodePlugin` during compilation. An end-to-end render proof is impossible here by construction: rendering an MDX-inline `<Preview>` requires resolving it, and any server module importing `@xerena/preview` re-poisons the graph (see Step 0). So prove injection at the compilation layer instead.
+
+Create a temporary `content/docs/__spike.mdx`:
 
 ```mdx
 ---
@@ -1244,7 +1284,7 @@ title: Spike (temporary)
 </Preview>
 ```
 
-Build, then assert the emitted HTML for `/__spike` contains the code panel with the exact source `<button type="button">Plain</button>`. Then delete `content/docs/__spike.mdx` — it must not ship.
+Run `pnpm exec nx run docs:build` (it is EXPECTED to fail prerender with `Expected component 'Preview' to be defined` — that failure itself confirms the page compiled; do not fix it). Then assert the fumadocs-mdx compiler output contains the injection: grep the generated `.source/` tree for the exact string `code="<button type="button">Plain</button>"` (or its escaped equivalent) inside the `__spike` compiled output. That string can only exist if `previewCodePlugin` ran. Then delete `content/docs/__spike.mdx` and remove any `__spike` meta entry — neither may ship, and the final green build below must show no `__spike` residue.
 
 Add the new sections/pages to the relevant `meta.json` files, then:
 
