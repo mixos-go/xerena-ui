@@ -418,3 +418,303 @@ amendment + own commit with review): external `react-dom/client` (and
 - Step 4 order preserved for retry: files are in place up to the spike
   proof; after both fixes land elsewhere, resume at Step 4 (assert spike
   HTML → delete spike → write final meta.jsons → `docs:build` green).
+
+## Task 5 resumed after unblockers — BLOCKED again on a NEW failure (2026-09-25)
+
+Resumed per brief on `feat/docs-preview-phase7` at `a63ab2a`, WIP intact
+(all six guide/brand bodies re-verified byte-identical; spike + 3 demos
+start with `'use client'`; meta.json holds the `"__spike"` entry;
+`@xerena/preview` dist entries start with `'use client'`; `grep -c
+rendererPackageName packages/react/dist/index.js` = 0). Prior fixes
+e033dcf (MDX wiring), a040a37 (react externals), a63ab2a (preview
+`'use client'`) verified present — not re-fixed.
+
+Step 4 spike-proof build (`pnpm exec nx run docs:build --skip-nx-cache`,
+spike + meta entry already staged): FAIL, new error. The old `Expected
+component 'Preview' to be defined` is gone (fix 1 works — global
+registration resolves). Prerender of `/docs/__spike` now fails with:
+
+```text
+Error: Minified React error #527; visit https://react.dev/errors/527?args[]=19.3.0-canary-cbb046ab-20260731&args[]=19.3.0 ...
+Export encountered an error on /docs/[[...slug]]/page: /docs/__spike, exiting the build.
+```
+
+Root cause (traced, not guessed — no fix attempted, out of Task 5 scope):
+
+1. `next/dist/compiled/react` (the non-experimental channel Next 16.3.6
+   uses by default) is itself canary `19.3.0-canary-cbb046ab-20260731`
+   (extracted from `compiled/react/cjs/react.production.js`; the
+   `-experimental` twin is `19.3.0-experimental-...`). No canary exists in
+   `pnpm-lock.yaml` or the workspace — it ships inside Next.
+2. The SSR prerender chunk (`apps/docs/.next/server/chunks/ssr/_0u2mzfc._.js`,
+   sourcemap-verified) pairs that vendored canary `react`
+   (`next/dist/compiled/react/index.js`) with the workspace stable
+   `react-dom@19.3.0`, which `@xerena/react/dist/index.js` pulls in via its
+   top-level external `import ... from "react-dom"` (line 3, for
+   `createPortal`; importing any export evaluates the whole single-file
+   dist, so every demo and the spike trigger it).
+3. Stable react-dom's module-eval exact-version check
+   (`React.version !== '19.3.0'`) reads the canary react and throws #527.
+   Workspace `react` itself is stable 19.3.0 (node resolution confirms) —
+   the canary wins only inside Next's SSR graph, so package suites and
+   `tsc` stay green while `docs:build` prerender dies.
+
+Why this is a NEW failure, not the old one: previously the bundled
+react-dom inside `@xerena/react/dist` threw; now the dist is clean
+(0 bundled copies) and the throw comes from the workspace stable
+react-dom module meeting Next's vendored canary react — a toolchain
+pairing issue no `apps/docs/content` change can fix (any MDX or demo
+importing `@xerena/react`, `@xerena/preview`, or `react-dom` hits it;
+the spike needs Preview, the pilots need demos — all paths blocked).
+
+Candidate directions (all outside Task 5 scope — need plan amendment,
+none attempted): align workspace react/react-dom with Next's vendored
+channel; alias `react`/`react-dom` consistently in `next.config.mjs`
+(Task 4 scope); or remove the top-level `react-dom` import from
+`@xerena/react`'s entry (code-split/lazy — `packages/react` scope,
+published package). Stopping per brief.
+
+State left: same WIP as before (6 guide/brand `.mdx`, 3 pilot `.mdx`,
+3 `_*-demo.tsx`, `__spike.mdx`, meta.json `"__spike"` scaffolding, this
+entry — all uncommitted, no commits made); `apps/docs/tsconfig.json`
+build churn restored via checkout. Resume again at Step 4 once amended.
+
+## Task 4c: SSR-safe overlays — BLOCKED on a focus regression (2026-09-25)
+
+Steps 1-2 executed verbatim; Step 3 test conversion done with same-strength
+assertions only. Step 3 `react:test` gate is red on 2 Menu focus tests whose
+root cause is a real behavior regression in the specified approach, fixable
+only in `Menu.tsx` (out of brief scope). Step 4 `docs:build` still fails with
+the identical error #527 on `/docs/__spike` — workspace dists are proven
+clean, so the remaining poisoning path is third-party. Per the brief ("on
+failure: stop and report"), stopped before Step 4 commit. No commits made.
+All Task 4c WIP below is uncommitted in the working tree.
+
+### Step 1: Toast.tsx lazy createRoot — DONE verbatim
+
+- Top-level value import replaced with `import type { Root } from
+  'react-dom/client'` (erased at compile, SSR-safe); `useEffect` import kept.
+- `let root: Root | null`, `async ensureRoot()` loads `createRoot` via
+  `await import('react-dom/client')` inside the client-only path, then
+  creates/appends `#xerena-toast-stack` exactly as before.
+- `flush()` is fire-and-forget (`void ensureRoot().then((r) => r.render(...))`)
+  with the stack JSX byte-identical. `Toast`, `TOAST_STACK`,
+  `setToastThemeMode`, `toast()` shapes identical; `toast()` stays sync-void.
+
+### Step 2: OverlayPrimitive.tsx lazy createPortal — DONE verbatim, hooks verified
+
+Hook verification FIRST (per plan — no guard needed, recorded here):
+
+- `useFocusTrap` touches `document` only at lines 22/25, inside the `onKey`
+  handler defined within its `useEffect` (lines 12-32). Render body
+  (`useRef` + `useEffect` + `return ref`) touches nothing.
+- `useDismissable` touches `document` only at lines 18-19/21-22, inside its
+  `useEffect` (lines 9-24). Render body touches nothing.
+- Neither hook was guarded; both are SSR-safe as written.
+
+Implementation matches the specified shape exactly: `PortalFn` type,
+`useState<PortalFn | null>(null)` + mount `useEffect` with `live` flag doing
+`void import('react-dom').then((m) => { if (live) setPortal(() => m.createPortal) })`,
+`if (!open || !portal) return null`, and `document.body` reached only as the
+`portal(...)` container after client-side load. Portal wrapper JSX unchanged.
+
+### Step 3: tests + gates — RED on 2 Menu tests (blocker, see below)
+
+RED verified before conversion: 8 failures across OverlayPrimitive (3),
+dialog (2), drawer (3), popover (flaky 1) — all "element not found", i.e. the
+portal now appears one effect tick after mount. `toast.test.tsx` was already
+async and stayed green untouched.
+
+Converted to async with SAME assertions (no test deleted, none weakened —
+`getBy*` to `findBy*` / `waitFor` only):
+
+- `OverlayPrimitive.test.tsx`: 3 tests async (`findByText`, `waitFor` on the
+  `[data-xerena-overlay]` theme assertions); Escape + close-removal parts
+  unchanged and still sync (deterministic: listeners attach on mount,
+  `open={false}` returns null synchronously).
+- `dialog.test.tsx`: aria-modal test uses `findByRole`; labelledby test wraps
+  the `aria-labelledby` assertions in `waitFor` (Title sets it via effect after
+  the portal mounts); auto-id test waits for the attribute before reading it.
+- `drawer.test.tsx`: 4 tests async (`findByText`); closed-state `queryBy`
+  assertions stay sync.
+- `popover.test.tsx`: `findByText('Panel')` (was flaky: failed one run, passed
+  the next — now deterministic).
+
+Gate tails (all with --skip-nx-cache):
+
+- `nx run react:build`: green.
+- Exact grep proof: `grep -nE "^import.*react-dom|^import.*from \"react-dom"
+  packages/react/dist/index.js` exits 1 (no top-level react-dom import).
+  `react-dom` survives in dist only as dynamic bare imports — line 58
+  `await import("react-dom/client")` (toast) and line 194
+  `import("react-dom").then(...)` (overlay); `createPortal|createRoot` count
+  is 2 (usages only, zero bundled definitions). `packages/preview/dist/index.js`
+  contains zero `react-dom` references.
+- `nx run-many -t test typecheck lint --projects=react`: test 105/107
+  (50/51 files) — only `menu.test.tsx` 2 failures (blocker); typecheck and
+  lint run separately afterward: both green.
+
+### Blocker: lazy portal breaks Menu focus-on-open (needs Menu.tsx, out of scope)
+
+Failing (unchanged, still sync — waiting cannot fix them):
+
+- `Menu > opens on trigger click and focuses the first item`
+- `Menu > navigates items with arrows and closes on Escape returning focus
+  to the trigger`
+
+Root cause (traced, not guessed — `Menu.tsx:29-34`): `Menu.Content` focuses
+the first item in `useEffect(..., [open])`. With the specified lazy portal,
+opening renders OverlayPrimitive `null` for one tick (portal not loaded), so
+`contentRef.current` is still null when that effect runs and the focus call
+is a no-op; when the portal mounts, `open` has not changed, so the effect
+never re-runs and focus stays on the trigger. Same commit also orphans
+`useFocusTrap` wiring for Dialog/Drawer: its effect deps `[open, ref.current]`
+are unchanged across the portal-load commit while the element only appears at
+that commit (`if (!el) return` taken on mount, never re-run) — Tab-trapping is
+silently dead (no suite test covers it; proven by scratch probe B below).
+
+Proof (scratch file, since deleted — never part of the suite):
+
+- Probe A (menu focus with 1000 ms `waitFor`): FAILS with the Step-2 code
+  (focus stays on trigger), PASSES on stashed baseline (verified via
+  `git stash push` of the two source files + rerun: 2/2 pass, then
+  `git stash pop` restored all WIP).
+- Probe B (Dialog Tab-wrap: focus Last, dispatch bubbling Tab, expect First
+  focused): FAILS with the Step-2 code, PASSES on baseline. Same stash
+  experiment, same result.
+
+Not attempted (all out of brief scope, which limits sources to Toast.tsx +
+OverlayPrimitive.tsx): touching `Menu.tsx` (e.g. re-running its focus effect
+once portal content mounts), reordering/gating hooks inside OverlayPrimitive
+beyond the specified snippet, or weakening the 2 Menu assertions to fake the
+gate green. Candidate directions for amendment: make the focus effect in
+`Menu.tsx` portal-aware; or re-run element-dependent effects in
+OverlayPrimitive once the portal mounts (deviates from the specified snippet
+and still cannot rescue Menu's own `[open]` effect without a Menu.tsx change).
+
+### Step 4: docs:build reach — still the identical error #527 (not fixed by 4c)
+
+`nx run docs:build --skip-nx-cache` (fresh lazy `react` dist confirmed in
+place — dist lines 58/194 above) fails prerendering `/docs/__spike` with the
+byte-identical error:
+
+```text
+Error: Minified React error #527; visit https://react.dev/errors/527?args[]=19.3.0-canary-cbb046ab-20260731&args[]=19.3.0 ...
+Export encountered an error on /docs/[[...slug]]/page: /docs/__spike, exiting the build.
+```
+
+The spike page uses zero overlay components (Preview + plain button), and both
+workspace dists are proven `react-dom`-clean at module-eval time, so Task 4c
+cannot move this build further. Read-only grep points at the remaining
+third-party path: `fumadocs-ui/dist` carries top-level static `react-dom`
+imports evaluated in the same SSR graph (`layouts/flux/page/slots/toc.js`
+`createPortal`, `provider/base.js` + `components/sidebar/base.js` +
+`layouts/shared/slots/theme-switch.js` `flushSync`, plus
+`react-medium-image-zoom`), which meet Next 16's vendored canary react
+(`19.3.0-canary-cbb046ab-20260731`) and throw the same exact-version check.
+Needs plan amendment (toolchain channel alignment or similar) — not more
+`@xerena/react` surgery. Do not retry pinning/aliasing without amendment
+(plan already records those as rejected).
+
+### State left for the amendment session
+
+- Uncommitted Task 4c WIP: `packages/react/src/components/feedback/Toast.tsx`,
+  `packages/react/src/primitives/OverlayPrimitive.tsx`,
+  `packages/react/src/primitives/OverlayPrimitive.test.tsx`,
+  `packages/react/src/components/feedback/dialog.test.tsx`,
+  `packages/react/src/components/feedback/drawer.test.tsx`,
+  `packages/react/src/components/feedback/popover.test.tsx`, plus this entry.
+  Pre-existing Task 5 WIP untouched (`apps/docs/content/...`, `__spike.mdx`,
+  `meta.json`, `tsconfig.json` churn).
+- No commits made; no weakened assertions (zero); no files outside
+  `packages/react/src` + ledger touched.
+- Resume: amend the plan for (1) Menu/focus-trap portal-awareness and (2) the
+  fumadocs-ui SSR react-dom path; then re-run Step 3 gates + Step 4
+  `docs:build` before any commit.
+
+## Task 5 completed — PASS (2026-09-25, amended plan: client-only demo boundary)
+
+Resumed at amended Step 0 on `feat/docs-preview-phase7` (`76d228f` in HEAD).
+Preconditions verified: prior WIP intact; Task 4c WIP reverted via checkout
+(6 files, no separate commit, `git status` confirms zero `packages/react`
+changes); e033dcf/a040a37/a63ab2a/76d228f all in HEAD.
+
+### Step 0 (done, committed alone as 84ae510)
+
+Removed `Preview` import + mapping from `apps/docs/mdx-components.tsx`
+(kept `defaultMdxComponents` + function shape). Exact message:
+`fix(docs): drop Preview from server MDX map (client demos own it)`.
+
+### Steps 1–3 (done)
+
+Guides/brand unchanged from the stopped attempt (byte-identical bodies,
+re-verified). Demos already owned `<Preview title code>` — kept. Pilot MDX
+pages restructured from static demo imports to the client-only boundary.
+
+Ruling 1 — bare `const X = dynamic(...)` in MDX does not parse: all three
+pilots failed compile with `10:6: Could not parse expression with acorn /
+Unexpected content after expression`. Isolated probe over remark-mdx
+(`packages/preview` devDeps): bare-const PARSE FAIL, `export const`
+PARSE OK (MDX ESM nodes must be import/export; the options object was
+tokenized as an expression container). First fixed with `export const`.
+— Cost if wrong: nil (probe-proven; build-confirmed).
+
+Ruling 2 — `dynamic(..., { ssr: false })` is illegal in a Server Component
+(Turbopack: "`ssr: false` is not allowed with `next/dynamic` in Server
+Components. Please move it into a Client Component"), so the plan's inline
+pattern cannot work as written. Replaced with colocated `'use client'`
+`_*-loader.tsx` files exporting the same `dynamic()` call (same target,
+same `ssr: false`, same `<p>Loading preview…</p>` fallback); MDX pages
+statically import the loader (`import { ButtonDemo } from
+'./_button-demo-loader'`) and render `<ButtonDemo />` unchanged. Preserves
+every load-bearing property: no `@xerena` module in any server graph
+(MDX top-level imports are only `next/dynamic`→loader chain,
+`fumadocs-ui/components/callout`, and prose/fence text). — Cost if wrong:
+3 small files the scale phase copies as a pair.
+
+Ruling 3 — kept explicit `import { Callout }` in pilot MDX (the amended
+"only dynamic() calls and prose" cannot be literal since `<XxxDemo />`
+usage is itself JSX and is mandated; the Callout rule mandates
+`<Callout>` without specifying resolution). Explicit import is safe: the
+amended plan verifies fumadocs-ui's graph is `react-dom`-free. — Cost if
+wrong: one-line-per-page change to global resolution.
+
+### Step 4 (done — gate green)
+
+Plugin REGISTRATION proven at the compilation layer: `docs:build` with the
+verbatim `__spike.mdx` fails prerender with exactly the predicted
+`Expected component 'Preview' to be defined` (proves the page compiled;
+not fixed), and the emitted SSR chunk contains the injected
+`code:'<button type="button">Plain</button>'` verbatim alongside
+`_missingMdxReference("Preview")` — a string that can only exist if
+`previewCodePlugin` ran in the fumadocs-mdx pipeline. Spike file deleted,
+`__spike` meta entry removed; final `out/` verified free of `*spike*`.
+Final meta.jsons: root `["index","guide","brand","components"]`,
+guide (5 pages), components (`actions`/`form`/`feedback`), one leaf
+`meta.json` per pilot category (mirrors legacy sidebar names).
+`docs:build --skip-nx-cache`: exit 0, 14/14 static pages; routes asserted
+in `out/` (index, brand, 5 guides, 3 pilots); static search payload at
+`out/api/search` (560508 bytes). `docs:typecheck` + `docs:lint` clean.
+Render check: dev serves under basePath (`/xerena-ui/...` → 200 after
+trailing-slash redirect for button/dialog/theming); SSR HTML carries the
+`<p>Loading preview…</p>` fallback. Consequence of the client-only
+boundary (recorded, not a gap): code panels render post-hydration, so
+static HTML cannot show them — substituted with client-bundle evidence
+(all three explicit `code` strings + `xr-preview__code` surface present in
+`out/_next/static/chunks/`) plus Task 2's verbatim-code unit tests (7/7).
+
+### Per-page recipe for the scale phase
+
+Per component: `_name-demo.tsx` (`'use client'`, owns `<Preview title
+code>` with reader-facing source, exact web API) + `_name-demo-loader.tsx`
+(`'use client'`, re-exports the same `dynamic(ssr:false)` call) + page
+MDX (frontmatter, Callout/demo-loader imports only, ported prose/tables,
+`<Demo/>` after Usage). Never: `@xerena` imports or `<Preview>` in MDX,
+`react-dom`-touching modules in any server graph. Colocated `_*.tsx`
+files are ignored by the fumadocs loader for routing (build-proven) but
+resolvable as relative imports. Note: `ButtonProps` has no `onClick`
+(excess-prop error) — demos use a native `<button>` trigger and
+`Dialog.Close` for dismissal.
+
+Committed per Step 5 as `docs: port guides and Button/Select/Dialog
+pilots with live previews`. Step 6 follows after the gate.
