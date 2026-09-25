@@ -1,4 +1,12 @@
 {
   "title": "Form",
-  "pages": ["select"]
+  "pages": [
+    "field",
+    "input",
+    "textarea",
+    "select",
+    "checkbox",
+    "radio",
+    "switch"
+  ]
 }
