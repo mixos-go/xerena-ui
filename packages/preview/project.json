@@ -1,0 +1,25 @@
+{
+  "name": "preview",
+  "projectType": "library",
+  "sourceRoot": "packages/preview/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": { "command": "pnpm build", "cwd": "packages/preview" },
+      "outputs": ["{projectRoot}/dist"]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": { "command": "vitest run", "cwd": "packages/preview" },
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "options": { "command": "tsc -p tsconfig.json --noEmit", "cwd": "packages/preview" }
+    },
+    "lint": {
+      "executor": "nx:run-commands",
+      "options": { "command": "eslint src", "cwd": "packages/preview" }
+    }
+  }
+}

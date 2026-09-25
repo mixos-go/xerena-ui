@@ -155,3 +155,23 @@ the loop source is resolved by a further plan amendment.
 
 Working tree state: `packages/preview/` (12 files, amended) untracked, `pnpm-lock.yaml`
 workspace-link update modified, root `package.json` untouched. This entry committed alone.
+
+## Task 2 completed — PASS (2026-09-25)
+
+Applied amendment `4279d46` (guarded `ModeSync`): reads both `theme` and `setTheme` from
+`useTheme()`, holds `setTheme` in a ref, and only syncs when `theme.mode !== mode` with deps
+`[mode, theme.mode]`. All other WIP files byte-identical; tests unmodified.
+
+### Gate tails (all with --skip-nx-cache)
+
+- `nx run-many -t test typecheck lint --projects=preview`: green.
+  `preview:test`: 7/7 pass (incl. both toggle tests and the reduced-motion test), 320 ms.
+- `nx run preview:build`: green. `dist/` contains exactly `index.js`, `index.cjs`,
+  `index.d.ts`, `styles.css`; no `dist/mdx.*` (ships with Task 3).
+- Step 10: root `package.json` `test`/`lint`/`typecheck` scripts now list
+  `tokens,react,react-native,brand,styling,preview` (verified via node).
+- TDD record: RED (`Failed to resolve import "./Preview"`) verified before implementation;
+  intermediate 5/7 (controlled-prop drop) and hang (unguarded setTheme loop) failures
+  documented above; final GREEN is 7/7 unmodified tests.
+
+Committed per Step 11 as `feat(preview): public @xerena/preview package with live Preview surface`.

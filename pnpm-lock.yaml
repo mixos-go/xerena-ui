@@ -122,6 +122,45 @@ importers:
         specifier: ^3.0.0
         version: 3.2.7(@types/node@22.20.2)(jsdom@25.0.1)(terser@5.51.2)(yaml@2.9.0)
 
+  packages/preview:
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^16.0.0
+        version: 16.3.3(@testing-library/dom@10.4.1)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@types/react':
+        specifier: ^19.0.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: ^19.0.0
+        version: 19.3.0(@types/react@19.3.0)
+      '@xerena/react':
+        specifier: ^0.1.0
+        version: 0.1.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      jsdom:
+        specifier: ^25.0.0
+        version: 25.0.1
+      react:
+        specifier: ^19.0.0
+        version: 19.3.0
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.3.0(react@19.3.0)
+      typescript:
+        specifier: ^5.6.0
+        version: 5.9.3
+      vite:
+        specifier: ^6.0.0
+        version: 6.4.3(@types/node@22.20.2)(terser@5.51.2)(yaml@2.9.0)
+      vite-plugin-dts:
+        specifier: ^4.0.0
+        version: 4.5.4(@types/node@22.20.2)(rollup@4.63.1)(typescript@5.9.3)(vite@6.4.3(@types/node@22.20.2)(terser@5.51.2)(yaml@2.9.0))
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.7(@types/node@22.20.2)(jsdom@25.0.1)(terser@5.51.2)(yaml@2.9.0)
+
   packages/react:
     dependencies:
       '@xerena/styling':
@@ -2736,6 +2775,21 @@ packages:
 
   '@vueuse/shared@12.8.2':
     resolution: {integrity: sha512-dznP38YzxZoNloI0qpEfpkms8knDtaoQ6Y/sfS0L7Yki4zh40LFHEhur0odJC6xTHG5dxWVPiUWBXn+wCG2s5w==}
+
+  '@xerena/react@0.1.0':
+    resolution: {integrity: sha512-YzgNqPoDQwxWcLUfIsCJc4lpGJ/+81M0FyjU7rQe5eHxg0FE1kt7pHLOGRo8Kjyu8MnsukqwD3MtZzB4FNpEtQ==}
+    peerDependencies:
+      react: ^19.0.0
+      react-dom: ^19.0.0
+
+  '@xerena/styling@0.1.0':
+    resolution: {integrity: sha512-BbLyEB2GO+2BoYnma3szQbTcKbFImZ3crz+ZutRwTJpDQuVEKkgVLzch7ooNqo0XvMo4oVpPlEl8ubGh+gvRPg==}
+    peerDependencies:
+      react: ^19.0.0
+      react-dom: ^19.0.0
+
+  '@xerena/tokens@0.1.0':
+    resolution: {integrity: sha512-xjaj0i0tMtgdEl33Uzg6h4UZ43MDzHr1DGNJcs03et0wu9+R0SvSFaJ60gvn4UlrdKU2NKXAdZmwapnk82oyyg==}
 
   '@yarnpkg/lockfile@1.1.0':
     resolution: {integrity: sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==}
@@ -8887,6 +8941,21 @@ snapshots:
       vue: 3.5.42(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
+
+  '@xerena/react@0.1.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      '@xerena/styling': 0.1.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      '@xerena/tokens': 0.1.0
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+
+  '@xerena/styling@0.1.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+    dependencies:
+      '@xerena/tokens': 0.1.0
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+
+  '@xerena/tokens@0.1.0': {}
 
   '@yarnpkg/lockfile@1.1.0': {}
 
