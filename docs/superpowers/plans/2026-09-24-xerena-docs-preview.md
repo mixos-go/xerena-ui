@@ -313,7 +313,7 @@ export default [
 
 `scripts/copy-css.mjs`:
 ```js
-import { copyFileSync, mkdirSync } from 'node:fs'
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -321,6 +321,18 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 mkdirSync(resolve(root, 'dist'), { recursive: true })
 copyFileSync(resolve(root, 'src/styles.css'), resolve(root, 'dist/styles.css'))
 console.log('copied dist/styles.css')
+
+// Vite strips 'use client' directives when bundling. Next.js RSC needs the
+// directive present in the published entry, so re-apply it post-build.
+// index.js + index.cjs ONLY — never mdx.* (Node-only remark plugin).
+for (const file of ['index.js', 'index.cjs']) {
+  const path = resolve(root, 'dist', file)
+  const source = readFileSync(path, 'utf8')
+  if (!source.startsWith("'use client'")) {
+    writeFileSync(path, `'use client';\n${source}`)
+    console.log(`prepended 'use client' to dist/${file}`)
+  }
+}
 ```
 
 (Plain copy — unlike `react`'s script, there is nothing to concatenate: token values arrive at runtime via `@xerena/react/styles.css`, which the consumer also loads.)
@@ -523,7 +535,7 @@ Plain `pnpm install` (not `--frozen-lockfile`) because the new workspace package
 cd /home/ubuntu/xerena-ui && pnpm exec nx run preview:build --skip-nx-cache
 ```
 
-Expected: `dist/index.js`, `dist/index.cjs`, `dist/index.d.ts`, `dist/styles.css` exist. (`dist/mdx.*` do NOT exist yet — the `mdx` entry ships with Task 3.)
+Expected: `dist/index.js`, `dist/index.cjs`, `dist/index.d.ts`, `dist/styles.css` exist (`dist/mdx.*` do NOT exist yet — the `mdx` entry ships with Task 3), AND the first line of both `dist/index.js` and `dist/index.cjs` is exactly `'use client';` (assert with `head -1`; Vite strips the source directive at bundle time, the post-build script restores it).
 
 - [ ] **Step 10: Register the package in the root scripts**
 
