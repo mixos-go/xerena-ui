@@ -10,3 +10,4 @@ apps/docs/.next/
 apps/docs/.source/
 apps/docs/next-env.d.ts
 .nx/
+apps/docs/tsconfig.tsbuildinfo
