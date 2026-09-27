@@ -33,7 +33,10 @@ export function Preview({ title, description, code, defaultMode = 'light', showC
   const codeId = useId()
   const next: PreviewMode = mode === 'light' ? 'dark' : 'light'
   return (
-    <section className="xr-preview" aria-label={title ?? 'Example preview'}>
+    // data-xerena-theme on the whole block so the surface, toolbar and code
+    // follow the preview toggle — the Provider div alone sits INSIDE the
+    // surface, leaving the surface stuck on the light background in dark mode.
+    <section className="xr-preview" aria-label={title ?? 'Example preview'} data-xerena-theme={mode}>
       {(title !== undefined || description !== undefined) && (
         <div className="xr-preview__header">
           {title !== undefined && <p className="xr-preview__title">{title}</p>}
