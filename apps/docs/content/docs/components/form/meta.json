@@ -1,0 +1,18 @@
+{
+  "title": "Form",
+  "pages": [
+    "field",
+    "input",
+    "textarea",
+    "select",
+    "checkbox",
+    "checkbox-group",
+    "radio",
+    "radio-group",
+    "switch",
+    "slider",
+    "combobox",
+    "input-group",
+    "number-input"
+  ]
+}

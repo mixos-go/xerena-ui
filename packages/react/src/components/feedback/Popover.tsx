@@ -43,7 +43,7 @@ function Content({ children, side = 'bottom', className }: { children: ReactNode
     <OverlayPrimitive open onClose={onClose}>
       <div className={`xr-popover xr-popover--${side} ${className ?? ''}`}
         role="dialog" aria-label="Popover"
-        style={{ position: 'fixed', zIndex: 50, background: 'var(--xr-semantic-color-background)', border: '1px solid var(--xr-semantic-color-border)', borderRadius: 'var(--xr-radius-md)', padding: '8px 0', boxShadow: 'var(--xr-elevation-md)', ...POS[side] }}>
+        style={{ position: 'fixed', zIndex: 50, background: 'var(--xr-semantic-color-background)', border: '1px solid var(--xr-semantic-color-border)', borderRadius: 'calc(var(--xr-radius-md) * 1px)', padding: '8px 0', boxShadow: 'var(--xr-elevation-md)', ...POS[side] }}>
         {children}
       </div>
     </OverlayPrimitive>

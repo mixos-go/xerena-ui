@@ -1,0 +1,36 @@
+---
+title: Theming
+description: Three-layer token architecture and Provider theming.
+---
+
+# Theming
+
+Xerena UI uses a three-layer token architecture: primitive → semantic → component.
+
+```json
+{
+  "color": {
+    "primary": "var(--xr-color-ember-600)"
+  }
+}
+```
+
+Web consumes generated CSS variables (`@xerena/tokens/tokens.css`); React Native consumes the JSON token file (`@xerena/tokens/tokens.json`).
+
+Primitive color scales: `color.ember` (accent, 50–900) and `color.sand` (warm neutrals, 50–900). The tokens package also exposes `typography` (Fraunces / Instrument Sans / Geist Mono), `elevation` (borderless soft shadows), and `radius` (none → full, including large card sizes 2xl–4xl). Fonts are loaded by the consuming app, not bundled in the tokens package.
+
+## Provider theming
+
+The web `Provider` takes a `theme` prop of type `XTheme`: `{ mode: 'light' | 'dark', semantic?: Partial<Record<SemanticAlias, string>> }`. Dark mode is applied via the `[data-xerena-theme]` attribute set on the provider's wrapper element, and semantic aliases override the resolved token for that mode.
+
+```tsx
+<Provider theme={{ mode: 'dark', semantic: { primary: '#ff0000' } }}>
+  <App />
+</Provider>
+```
+
+The example above renders the app in dark mode (applied via `[data-xerena-theme]`) and provides a `primary` semantic override resolved to `#ff0000`.
+
+## Component theming
+
+Components consume styles through `--xr-semantic-color-*` variables. Because theming flows through CSS variables, a single semantic override re-themes every component at once, and component state (hover, active, focus) resolves from `*Hover` / `*Active` aliases in the active mode.

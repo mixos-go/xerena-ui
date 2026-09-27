@@ -94,7 +94,7 @@ export function Progress({ value = 0, variant = 'bar', size = 80, stroke = 8, cl
   const isFixed = variant === 'pageTop' || variant === 'pageBottom'
   const fixedStyle: CSSProperties = isFixed
     ? { position: 'fixed', left: 0, right: 0, height: 3, zIndex: 40, ...(variant === 'pageTop' ? { top: 0 } : { bottom: 0 }) }
-    : { width: '100%', height: 8, borderRadius: 'var(--xr-radius-full)' }
+    : { width: '100%', height: 8, borderRadius: 'calc(var(--xr-radius-full) * 1px)' }
   return (
     <div
       role="progressbar"

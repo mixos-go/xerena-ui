@@ -24,7 +24,7 @@ const COLORS: Record<string, string> = {
   destructive: 'var(--xr-semantic-color-danger)',
   outline: 'transparent',
   ghost: 'transparent',
-  soft: 'var(--xr-semantic-color-primary)',
+  soft: 'var(--xr-semantic-color-surface)',
   link: 'transparent',
 }
 const TEXT_COLORS: Record<string, string> = {

@@ -27,7 +27,7 @@ const POS_MAP: Record<string, CSSProperties> = {
 export function Message({ tone = 'neutral', position = 'bottom-center', title, description, icon, dismissible, onDismiss, className, children }: MessageProps) {
   return (
     <div role="alert" className={useClassName({ className }, ['xr-message', `xr-message--${tone}`])}
-      style={{ position: 'fixed', zIndex: 40, ...POS_MAP[position], display: 'flex', alignItems: 'flex-start', gap: 'var(--xr-spacing-2)', background: 'var(--xr-semantic-color-background)', border: '1px solid var(--xr-semantic-color-border)', borderRadius: 'var(--xr-radius-md)', padding: '12px 16px', boxShadow: 'var(--xr-elevation-md)' }}>
+      style={{ position: 'fixed', zIndex: 40, ...POS_MAP[position], display: 'flex', alignItems: 'flex-start', gap: 'calc(var(--xr-spacing-2) * 1px)', background: 'var(--xr-semantic-color-background)', border: '1px solid var(--xr-semantic-color-border)', borderRadius: 'calc(var(--xr-radius-md) * 1px)', padding: '12px 16px', boxShadow: 'var(--xr-elevation-md)' }}>
       <span className="xr-message__icon">{icon ?? ICONS[tone]}</span>
       <div className="xr-message__body">
         {title && <div className="xr-message__title" style={{ fontWeight: 600, color: 'var(--xr-semantic-color-text)' }}>{title}</div>}
