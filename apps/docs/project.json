@@ -5,11 +5,11 @@
   "targets": {
     "dev": {
       "executor": "nx:run-commands",
-      "options": { "command": "next dev", "cwd": "apps/docs" }
+      "options": { "command": "node islands/build.mjs && next dev", "cwd": "apps/docs" }
     },
     "build": {
       "executor": "nx:run-commands",
-      "options": { "command": "next build", "cwd": "apps/docs" },
+      "options": { "command": "node islands/build.mjs && next build", "cwd": "apps/docs" },
       "outputs": ["{projectRoot}/out"]
     },
     "typecheck": {

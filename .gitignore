@@ -8,6 +8,7 @@ apps/storybook/storybook-static/
 apps/docs/out/
 apps/docs/.next/
 apps/docs/.source/
+apps/docs/public/preview-islands/
 apps/docs/next-env.d.ts
 .nx/
 apps/docs/tsconfig.tsbuildinfo
