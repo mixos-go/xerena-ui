@@ -18,7 +18,7 @@ export function Toast({ variant = 'neutral', title, description, action, dismiss
   useEffect(() => { if (autoHideDuration) { const t = setTimeout(() => onDismiss?.(), autoHideDuration); return () => clearTimeout(t) } }, [autoHideDuration, onDismiss])
   return (
     <div role={variant === 'danger' ? 'alert' : 'status'} className={`xr-toast xr-toast--${variant} ${className ?? ''}`}
-      style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 50, background: 'var(--xr-semantic-color-background)', border: '1px solid var(--xr-semantic-color-border)', borderRadius: 'var(--xr-radius-md)', padding: '12px 16px', boxShadow: 'var(--xr-elevation-md)', display: 'flex', alignItems: 'flex-start', gap: 'var(--xr-spacing-2)', maxWidth: 360, animation: 'xr-toast-in calc(var(--xr-motion-duration-moderate) * 1ms) cubic-bezier(var(--xr-motion-easing-enter))' } as CSSProperties}>
+      style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 50, background: 'var(--xr-semantic-color-background)', border: '1px solid var(--xr-semantic-color-border)', borderRadius: 'calc(var(--xr-radius-md) * 1px)', padding: '12px 16px', boxShadow: 'var(--xr-elevation-md)', display: 'flex', alignItems: 'flex-start', gap: 'calc(var(--xr-spacing-2) * 1px)', maxWidth: 360, animation: 'xr-toast-in calc(var(--xr-motion-duration-moderate) * 1ms) cubic-bezier(var(--xr-motion-easing-enter))' } as CSSProperties}>
       <div style={{ flex: 1 }}>
         {title && <div style={{ fontWeight: 600 }}>{title}</div>}
         {description && <div style={{ fontSize: 14, color: 'var(--xr-semantic-color-textMuted)', marginTop: 4 }}>{description}</div>}

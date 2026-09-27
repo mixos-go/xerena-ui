@@ -4,7 +4,7 @@ export interface AvatarProps { variant?: 'image'|'initials'|'icon'; size?: 'sm'|
 const SIZES = { sm: 28, md: 40, lg: 56, xl: 80 } as const
 export function Avatar({ variant = 'initials', size = 'md', shape = 'circle', src, alt, initials, icon, onClick, className }: AvatarProps) {
   const s = SIZES[size]
-  const style: CSSProperties = { width: s, height: s, borderRadius: shape === 'circle' ? 'var(--xr-radius-full)' : 'var(--xr-radius-md)', background: 'var(--xr-semantic-color-surface)', color: 'var(--xr-semantic-color-textMuted)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: onClick ? 'pointer' : undefined, transition: 'box-shadow calc(var(--xr-motion-duration-fast) * 1ms) cubic-bezier(var(--xr-motion-easing-standard))' }
+  const style: CSSProperties = { width: s, height: s, borderRadius: shape === 'circle' ? 'calc(var(--xr-radius-full) * 1px)' : 'calc(var(--xr-radius-md) * 1px)', background: 'var(--xr-semantic-color-surface)', color: 'var(--xr-semantic-color-textMuted)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: onClick ? 'pointer' : undefined, transition: 'box-shadow calc(var(--xr-motion-duration-fast) * 1ms) cubic-bezier(var(--xr-motion-easing-standard))' }
   return (
     <div className={useClassName({ className }, ['xr-avatar', `xr-avatar--${size}`, `xr-avatar--${shape}`])} style={style}
       role={onClick ? 'button' : undefined} tabIndex={onClick ? 0 : undefined} onClick={onClick} aria-label={alt}>

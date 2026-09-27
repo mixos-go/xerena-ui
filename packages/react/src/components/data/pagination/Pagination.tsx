@@ -34,7 +34,7 @@ export function Pagination({ total, pageSize, current, onChange, siblingCount = 
                 onFocus={(e) => { if (renderPagePreview) { setHoveredPage(p as number); setAnchor(e.currentTarget) } }}
                 onBlur={onLeave}
                 className="xr-pagination__page"
-                style={{ paddingInline: 8, border: p === current ? '1px solid var(--xr-semantic-color-primary)' : '1px solid transparent', borderRadius: 'var(--xr-radius-md)', background: p === current ? 'var(--xr-semantic-color-primary)' : 'transparent', color: p === current ? 'var(--xr-semantic-color-textOnStrong)' : 'var(--xr-semantic-color-text)' }}
+                style={{ paddingInline: 8, border: p === current ? '1px solid var(--xr-semantic-color-primary)' : '1px solid transparent', borderRadius: 'calc(var(--xr-radius-md) * 1px)', background: p === current ? 'var(--xr-semantic-color-primary)' : 'transparent', color: p === current ? 'var(--xr-semantic-color-textOnStrong)' : 'var(--xr-semantic-color-text)' }}
               >{p}</button>
             </li>
           )
