@@ -6,7 +6,7 @@ const VARIANTS = { outlined: { border: '1px solid var(--xr-semantic-color-border
 export function Card({ variant = 'outlined', padding = 'md', className, children }: CardProps) {
   const { focusWithin, onFocus, onBlur } = useFocusRing()
   const { pressed, onPointerDown, onPointerUp, onPointerLeave } = usePress()
-  const style: CSSProperties = { ...VARIANTS[variant], padding: semantic.spacing[padding] ? `${semantic.spacing[padding]}px` : undefined, borderRadius: 'var(--xr-radius-md)', transition: 'transform calc(var(--xr-motion-duration-base) * 1ms) cubic-bezier(var(--xr-motion-easing-standard)), box-shadow calc(var(--xr-motion-duration-base) * 1ms) cubic-bezier(var(--xr-motion-easing-standard))' }
+  const style: CSSProperties = { ...VARIANTS[variant], padding: semantic.spacing[padding] ? `${semantic.spacing[padding]}px` : undefined, borderRadius: 'calc(var(--xr-radius-md) * 1px)', transition: 'transform calc(var(--xr-motion-duration-base) * 1ms) cubic-bezier(var(--xr-motion-easing-standard)), box-shadow calc(var(--xr-motion-duration-base) * 1ms) cubic-bezier(var(--xr-motion-easing-standard))' }
   if (variant === 'interactive') {
     style.cursor = 'pointer'
     style.transform = pressed ? 'translateY(-1px)' : undefined

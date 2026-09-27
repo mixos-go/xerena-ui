@@ -24,7 +24,7 @@ function Description({ id, children }: { id?: string; children: ReactNode }) { r
 function Content({ children, className }: { children: ReactNode; className?: string }) {
   const { labelledBy } = useContext(Ctx)
   return <div role="dialog" aria-modal="true" aria-labelledby={labelledBy} className={`xr-dialog__content ${className ?? ''}`}
-    style={{ background: 'var(--xr-semantic-color-background)', borderRadius: 'var(--xr-radius-lg)', padding: 24, maxWidth: 480, width: '100%', boxShadow: 'var(--xr-elevation-lg)', position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 41 }}>
+    style={{ background: 'var(--xr-semantic-color-background)', borderRadius: 'calc(var(--xr-radius-lg) * 1px)', padding: 24, maxWidth: 480, width: '100%', boxShadow: 'var(--xr-elevation-lg)', position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', zIndex: 41 }}>
     {children}
   </div>
 }
